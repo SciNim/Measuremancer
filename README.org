@@ -1,0 +1,116 @@
+* Measuremancer - A library to handle your measurement uncertainties
+
+This library is inspired my the excellent [[https://github.com/JuliaPhysics/Measurements.jl][Measurements.jl]] and can, for
+all intents and purposes, be considered a port of it (even if it
+doesn't yet support some of its features).
+
+The basic gist is that one constructs =Measurement= objects for one's
+measurement values, which include uncertainties. This is done via one
+of two ways:
+#+begin_src nim
+import measuremancer
+let x = 1.0 ± 0.1 # via unicode operator
+let y = measurement(2.0, 0.5)
+#+end_src
+
+Printing either of these yields a string representation using the =±=
+unicode operator:
+#+begin_src sh
+1.0 ± 0.1
+#+end_src
+
+What makes this library actually useful however, is the ability to
+perform error propagation for the user.
+
+#+begin_src nim
+import measuremancer
+let x = 1.0 ± 0.1
+let y = 2.0 ± 0.5
+
+print x + y
+print x * y
+print x - y
+print x / y
+#+end_src
+(=print= is a helper defined to print the expression in addition to
+the measurement. You may use =echo= as usual for regular printing).
+yields:
+#+begin_src
+x + y: 3.0 ± 0.51
+x * y: 2.0 ± 0.54
+x - y: -1.0 ± 0.51
+x / y: 0.50 ± 0.13
+#+end_src
+
+Error propagation is performed according to linear error propagation
+theory (or sometimes called "Gaussian error propagation"):
+https://en.wikipedia.org/wiki/Propagation_of_uncertainty
+
+The library handles dependent variables correctly. This means things
+like:
+#+begin_src nim
+import measuremancer
+let x = 1.0 ± 0.1
+print x - x
+# and
+print x / x
+#+end_src
+are handled correctly, resulting in:
+#+begin_src sh
+x - x: 0.0 ± 0.0
+x / x: 1.0 ± 0.0
+#+end_src
+meaning the resulting variable has no error associated to it.
+
+We can also include more complicated expressions of course:
+#+begin_src nim
+import measuremancer
+
+proc gaus[T: FloatLike](x, μ, σ: T): T =
+  result = 1.0 / sqrt(2 * PI) * exp(- (x - μ)^2 / (2 * σ^2))
+
+let x = 1.0 ± 0.1
+let μ = 0.5 ± 0.05
+let σ = 1.2 ± 0.2
+
+print gaus(x, μ, σ)
+#+end_src
+/cough/ this is currently incorrect, need to go bughunting... :)
+#+begin_src sh
+gaus(x, μ, σ): 0.44 ± 0.021
+#+end_src
+Note: Julia's =Measurements.jl= says the result should be:
+#+begin_src sh
+0.366 ± 0.018
+#+end_src
+...
+
+** Other distinct data types
+
+Of course, we wouldn't be Nim if we couldn't also apply the whole
+logic to types other than =float=!
+
+Feel free to perform error propagation on =unchained= types for
+example:
+#+begin_src nim
+import unchained, meausuremancer
+
+let m = 1.0.kg ± 0.1.kg
+let a = 9.81.m•s⁻² ± 0.05.m•s⁻²
+
+print m * a
+#+end_src
+Uhh, this is also broken right now... I tried to hack together a
+solution (due to changing generics), but it's not working right now.. Anyway..
+
+
+** Compilation flags
+
+As of Nim version 1.6 any code using this library has to be compiled
+with:
+#+begin_src
+--experimental:unicodeOperators
+#+end_src
+
+Feel free to create a =nim.cfg= in the directory of your program to
+avoid having to set this setting manually every time.
