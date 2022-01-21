@@ -103,8 +103,14 @@ let a = 9.81.m•s⁻² ± 0.05.m•s⁻²
 
 print m * a
 #+end_src
-Uhh, this is also broken right now... I tried to hack together a
-solution (due to changing generics), but it's not working right now.. Anyway..
+which yields:
+#+begin_src sh
+m * a: 9.81 ± 0.982 KiloGram•Meter•Second⁻²
+#+end_src
+
+*NOTE*: Measurement math with different =unchained= units is currently
+only supported using multiplication, =*=. For the others the
+implementation is still pending.
 
 
 ** Compilation flags

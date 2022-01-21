@@ -34,6 +34,12 @@ proc toFloat*[T: SomeFloat](x: T): float = x.float # float is biggest type, so t
 
 proc initDerivatives[T](): Derivatives[T] = initOrderedTable[DerivKey[T], T]()
 
+proc changeType*[T; U](tab: Derivatives[T], dtype: typedesc[U]): Derivatives[U] =
+  result = initDerivatives[U]()
+  for key, val in pairs(tab):
+    let nkey = (val: key.val.U, uncer: key.uncer.U, tag: key.tag)
+    result[nkey] = val.U
+
 var idCounter = 0'u64
 proc initMeasurement[T](val, uncer: T, der = initDerivatives[T](),
                         id = uint64.high): Measurement[T] =
@@ -145,7 +151,7 @@ proc pretty*[T: FloatLike](m: Measurement[T], precision: int): string =
   when not (T is float):
     result.add " " & $T
 
-proc `$`*[T: FloatLike](m: Measurement[T]): string = pretty(m, 2)
+proc `$`*[T: FloatLike](m: Measurement[T]): string = pretty(m, 3)
 
 template print*(arg: untyped): untyped =
   echo astToStr(arg), ": ", $arg
@@ -174,11 +180,9 @@ proc `-`*[T: FloatLike](a, b: Measurement[T]): Measurement[T] =
 # generate helpers
 genOverloadsPlusMinus(`-`)
 
+## Type conversion. TODO: make this more type safe, funnily enough
 proc to[T: FloatLike; U](m: Measurement[T], dtype: typedesc[U]): Measurement[U] =
-  #result = initMeasurement[U](m.val.U, m.uncer.U, m.id, m.der)
-  # unsafe kids!
-  result = cast[Measurement[U]](m)
-  echo result.uncer
+  result = initMeasurement[U](m.val.U, m.uncer.U, m.der.changeType(dtype), m.id)
 
 # unary minus
 proc `-`*[T: FloatLike](m: Measurement[T]): Measurement[T] = procRes(-m.val, T(-1), m)
