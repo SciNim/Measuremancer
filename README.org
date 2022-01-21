@@ -69,7 +69,7 @@ We can also include more complicated expressions of course:
 #+begin_src nim
 import measuremancer
 
-proc gaus[T: FloatLike](x, μ, σ: T): T =
+proc gaus[T](x, μ, σ: T): T =
   result = 1.0 / sqrt(2 * PI) * exp(- ((x - μ)^2) / (2 * (σ^2)))
 
 let x = 1.0 ± 0.1
