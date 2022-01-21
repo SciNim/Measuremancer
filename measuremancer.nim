@@ -218,11 +218,26 @@ proc `/`*[U: FloatLike; T: FloatLike](m: Measurement[U], x: T{lit}): Measurement
     result = procRes(m.val / U(x), 1.0 / U(x), m)
 
 # Power `^`
-proc `^`*[T: FloatLike](m: Measurement[T], p: Natural): Measurement[T] =
-  result = procRes(m.val ^ p, p * m.val ^ (p - 1), m)
 
-proc `^`*[T: FloatLike](m: Measurement[T], p: FloatLike): Measurement[T] =
+#  result = procRes(pow(m.val, p), p.float * (m.val^(p - 1)), m)
+
+proc `**`*[T: FloatLike](m: Measurement[T], p: Natural): Measurement[T] =
+  result = procRes(m.val ^ p, p.float * m.val ^ (p - 1), m)
+proc `^`*[T: FloatLike](m: Measurement[T], p: Natural): Measurement[T] = m ** p
+
+proc `**`*[T: FloatLike](m: Measurement[T], p: FloatLike): Measurement[T] =
   result = procRes(pow(m.val, p), p * pow(m.val, (p - 1.0)), m)
+proc `^`*[T: FloatLike](m: Measurement[T], p: FloatLike): Measurement[T] = m ** p
+
+
+proc `**`*[T: FloatLike](a, b: Measurement[T]): Measurement[T] =
+  let powV = pow(a.val, b.val)
+  result = procRes(powV,
+                   [pow(a.val, b.val - 1.0),
+                    powV * log(a.val)],
+                   [a, b])
+proc `^`*[T: FloatLike](a, b: Measurement[T]): Measurement[T] = a ** b
+
 # ...
 
 
