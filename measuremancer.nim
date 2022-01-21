@@ -30,11 +30,25 @@ type
     id: IdType
     der: Derivatives[T] # map of the derivatives
 
+import hashes
+proc hash*[T: FloatLike](key: DerivKey[T]): Hash =
+  result = result !& hash(key.val)
+  result = result !& hash(key.uncer)
+  result = result !& hash(key.tag)
+  result = !$result
+
+proc `==`*[T: FloatLike](k1, k2: DerivKey[T]): bool =
+  if k1.tag == k2.tag and almostEqual(k1.val.float, k2.val.float) and
+     almostEqual(k1.uncer.float, k2.uncer.float):
+    result = true
+  else:
+    result = false
+
 proc toFloat*[T: SomeFloat](x: T): float = x.float # float is biggest type, so this should be fine
 
 proc initDerivatives[T](): Derivatives[T] = initOrderedTable[DerivKey[T], T]()
 
-proc changeType*[T; U](tab: Derivatives[T], dtype: typedesc[U]): Derivatives[U] =
+proc changeType[T; U](tab: Derivatives[T], dtype: typedesc[U]): Derivatives[U] =
   result = initDerivatives[U]()
   for key, val in pairs(tab):
     let nkey = (val: key.val.U, uncer: key.uncer.U, tag: key.tag)
@@ -61,20 +75,6 @@ proc procRes[T](res: T, grad: T, arg: Measurement[T]): Measurement[T] =
 
 proc derivative[T](a: Measurement[T], key: DerivKey[T]): T =
   result = if key in a.der: a.der[key] else: T(0.0)
-
-import hashes
-proc hash*[T: FloatLike](key: DerivKey[T]): Hash =
-  result = result !& hash(key.val)
-  result = result !& hash(key.uncer)
-  result = result !& hash(key.tag)
-  result = !$result
-
-proc `==`*[T: FloatLike](k1, k2: DerivKey[T]): bool =
-  if k1.tag == k2.tag and almostEqual(k1.val.float, k2.val.float) and
-     almostEqual(k1.uncer.float, k2.uncer.float):
-    result = true
-  else:
-    result = false
 
 ## A "type safe" solution required for `unchained` could be achieved with something like this.
 ## However, it shows the problem of getting a squared type as the `resder` argument
@@ -156,10 +156,6 @@ proc `$`*[T: FloatLike](m: Measurement[T]): string = pretty(m, 3)
 template print*(arg: untyped): untyped =
   echo astToStr(arg), ": ", $arg
 
-## TODO: if literal convert to `float`?
-proc toMeasurement[T: FloatLike](x: T): Measurement[T] = initMeasurement[T](x, T(0.0))
-proc toMeasurement[T: FloatLike](x: T{lit}): Measurement[float] = initMeasurement[float](x.float, 0.0)
-
 template genOverloadsPlusMinus(fn: untyped): untyped =
   proc `fn`*[T: FloatLike](x: T, m: Measurement[T]): Measurement[T] = result = procRes(fn(x, m.val), T(1), m)
   proc `fn`*[T: FloatLike](m: Measurement[T], x: T): Measurement[T] = result = procRes(fn(m.val, x), T(1), m)
@@ -188,7 +184,8 @@ proc to[T: FloatLike; U](m: Measurement[T], dtype: typedesc[U]): Measurement[U] 
 proc `-`*[T: FloatLike](m: Measurement[T]): Measurement[T] = procRes(-m.val, T(-1), m)
 
 proc `*`*[T: FloatLike; U: FloatLike](a: Measurement[T], b: Measurement[U]): auto =
-  let val = a.val * b.val
+  let val = a.val * b.val # TODO: the same logic should apply for the other cases.
+                          # the equivalent line ensures only valid types are mixed.
   type resTyp = typeof(val)
   result = procRes(val, [b.val.resTyp, a.val.resTyp], [a.to(resTyp), b.to(resTyp)])
 
@@ -218,9 +215,9 @@ proc `/`*[U: FloatLike; T: FloatLike](m: Measurement[U], x: T{lit}): Measurement
     result = procRes(m.val / U(x), 1.0 / U(x), m)
 
 # Power `^`
-
-#  result = procRes(pow(m.val, p), p.float * (m.val^(p - 1)), m)
-
+## NOTE: Using any of the following exponentiation functions is dangerous. The Nim parser
+## might include an additional prefix into the argument to `^` instead of keeping it as a,
+## well, prefix. So `-(x - μ)^2` is parsed as `(-(x - μ))^2`!
 proc `**`*[T: FloatLike](m: Measurement[T], p: Natural): Measurement[T] =
   result = procRes(m.val ^ p, p.float * m.val ^ (p - 1), m)
 proc `^`*[T: FloatLike](m: Measurement[T], p: Natural): Measurement[T] = m ** p
@@ -238,11 +235,8 @@ proc `**`*[T: FloatLike](a, b: Measurement[T]): Measurement[T] =
                    [a, b])
 proc `^`*[T: FloatLike](a, b: Measurement[T]): Measurement[T] = a ** b
 
-# ...
-
-
 # TODO: need to add a lot more primitive functions
-
+# Primitives
 proc exp*(m: Measurement): Measurement =
   result = procRes(exp(m.val), exp(m.val), m)
 
