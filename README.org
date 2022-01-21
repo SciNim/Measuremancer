@@ -70,7 +70,7 @@ We can also include more complicated expressions of course:
 import measuremancer
 
 proc gaus[T: FloatLike](x, μ, σ: T): T =
-  result = 1.0 / sqrt(2 * PI) * exp(- (x - μ)^2 / (2 * σ^2))
+  result = 1.0 / sqrt(2 * PI) * exp(- ((x - μ)^2) / (2 * (σ^2)))
 
 let x = 1.0 ± 0.1
 let μ = 0.5 ± 0.05
@@ -78,15 +78,12 @@ let σ = 1.2 ± 0.2
 
 print gaus(x, μ, σ)
 #+end_src
-/cough/ this is currently incorrect, need to go bughunting... :)
+*Note:* Be *very* careful using =^= or =**= for exponentiation. Notice
+the extra parenthesis around the =(x - μ)^2= term (and σ^2). That is, because at
+least as of Nim devel 1.7 it otherwise includes the =-= in the square!
 #+begin_src sh
-gaus(x, μ, σ): 0.44 ± 0.021
+gaus(x, μ, σ): 0.366 ± 0.0177
 #+end_src
-Note: Julia's =Measurements.jl= says the result should be:
-#+begin_src sh
-0.366 ± 0.018
-#+end_src
-...
 
 ** Other distinct data types
 
