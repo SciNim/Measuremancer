@@ -68,9 +68,9 @@ proc procRes[T](res: T, grad: T, arg: Measurement[T]): Measurement[T] =
   var der = initDerivatives[T]()
   for key, val in pairs(arg.der):
     if key.uncer != T(0.0):
-      der[key] = grad * val
+      der[key] = (grad * val).T # force to `T` to avoid `unchained` errors
   # σ is 0 if input's σ is zero, else it's ∂(f(x))/∂x * Δx =^= grad * arg.uncer
-  let σ = if arg.uncer == T(0.0): 0.0 else: abs(grad * arg.uncer)
+  let σ = if arg.uncer == T(0.0): T(0.0) else: abs((grad * arg.uncer).T) # force to `T` to avoid `unchained` errors
   result = initMeasurement[T](res, σ, der, 0'u32)
 
 proc derivative[T](a: Measurement[T], key: DerivKey[T]): T =
