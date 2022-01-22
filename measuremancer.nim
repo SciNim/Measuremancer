@@ -189,33 +189,54 @@ proc `-`*[T: FloatLike](m: Measurement[T]): Measurement[T] = procRes(-m.val, T(-
 proc `*`*[T: FloatLike; U: FloatLike](a: Measurement[T], b: Measurement[U]): auto =
   let val = a.val * b.val # TODO: the same logic should apply for the other cases.
                           # the equivalent line ensures only valid types are mixed.
-  type resTyp = typeof(val)
-  result = procRes(val, [b.val.resTyp, a.val.resTyp], [a.to(resTyp), b.to(resTyp)])
+  type resType = typeof(val)
+  result = procRes(val, [b.val.resType, a.val.resType], [a.to(resType), b.to(resType)])
+
+## The following two dirtry (!) templates help us with the assignment of the result
+## procedure calls, taking care of deducing the types and performing the conversions
+## so that we don't need to manually convert them all the time.
+## `assign1` is used for the call to `procRes` with a single argument and
+## `assign2` for the `procRes` with two arguments.
+template assign1(valArg, arg, m: untyped): untyped {.dirty.} =
+  let val = valArg
+  type resType = typeof(val)
+  result = procRes(val, arg.resType, m.to(resType))
+
+template assign2(valArg, arg1, arg2, m1, m2: untyped): untyped {.dirty.} =
+  let val = valArg
+  type resType = typeof(val)
+  result = procRes(val, [arg1.resType, arg2.resType], [m1.to(resType), m2.to(resType)])
 
 # helper overloads
-proc `*`*[T: FloatLike](x: T, m: Measurement[T]): Measurement[T] = result = procRes(x * m.val, x, m)
-proc `*`*[T: FloatLike](m: Measurement[T], x: T): Measurement[T] = result = procRes(m.val * x, x, m)
+proc `*`*[T: FloatLike; U: FloatLike](x: T, m: Measurement[U]): auto =
+  assign1(x * m.val, x, m)
+
+proc `*`*[T: FloatLike](m: Measurement[T], x: T): Measurement[T] =
+  assign1(m.val * x, x, m)
+
 ## Overloads for literals that force same type as Measurement has
 proc `*`*[T: FloatLike; U: FloatLike](x: T{lit}, m: Measurement[U]): Measurement[U] =
-    result = procRes(U(x) * m.val, U(x), m)
+  result = procRes(U(x) * m.val, U(x), m)
 proc `*`*[U: FloatLike; T: FloatLike](m: Measurement[U], x: T{lit}): Measurement[U] =
-    result = procRes(m.val * U(x), U(x), m)
+  result = procRes(m.val * U(x), U(x), m)
 
 
-proc `/`*[T: FloatLike](a, b: Measurement[T]): Measurement[T] =
+proc `/`*[T: FloatLike; U: FloatLike](a: Measurement[T], b: Measurement[U]): auto =
   let oneOverB = 1.0 / b.val
-  result = procRes(a.val / b.val, [oneOverB, -a.val * (oneOverB * oneOverB)], [a, b])
+  assign2(a.val / b.val, oneOverB, -a.val * (oneOverB * oneOverB), a, b)
 
 # helper overloads
-proc `/`*[T: FloatLike](x: T, m: Measurement[T]): Measurement[T] =
-  result = procRes(x / m.val, -x / (m.val * m.val), m)
-proc `/`*[T: FloatLike](m: Measurement[T], x: T): Measurement[T] =
-  result = procRes(m.val / x, 1.0 / x, m)
+proc `/`*[T: FloatLike; U: FloatLike](x: T, m: Measurement[U]): auto =
+  assign1(x / m.val, -x / (m.val * m.val), m)
+
+proc `/`*[T: FloatLike; U: FloatLike](m: Measurement[T], x: U): auto =
+  assign1(m.val / x, 1.0 / x, m)
+
 ## Overloads for literals that force same type as Measurement has
 proc `/`*[T: FloatLike; U: FloatLike](x: T{lit}, m: Measurement[U]): Measurement[U] =
-    result = procRes(U(x) / m.val, U(-x) / (m.val * m.val), m)
+  result = procRes(U(x) / m.val, U(-x) / (m.val * m.val), m)
 proc `/`*[U: FloatLike; T: FloatLike](m: Measurement[U], x: T{lit}): Measurement[U] =
-    result = procRes(m.val / U(x), 1.0 / U(x), m)
+  result = procRes(m.val / U(x), 1.0 / U(x), m)
 
 # Power `^`
 ## NOTE: Using any of the following exponentiation functions is dangerous. The Nim parser
