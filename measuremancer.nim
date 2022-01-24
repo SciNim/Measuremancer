@@ -56,6 +56,9 @@ proc `==`*[T: FloatLike](m: Measurement[T], x: T): bool =
 proc `==`*[T: FloatLike](x: T, m: Measurement[T]): bool =
   result = almostEqual(m.val, x) and m.uncer == 0.0
 
+proc isInf*[T: FloatLike](m: Measurement[T]): bool = m.val == Inf
+proc isNegInf*[T: FloatLike](m: Measurement[T]): bool = m.val == -Inf
+
 proc toFloat*[T: SomeFloat](x: T): float = x.float # float is biggest type, so this should be fine
 
 proc initDerivatives[T](): Derivatives[T] = initOrderedTable[DerivKey[T], T]()
