@@ -332,10 +332,9 @@ proc copysign*[T: FloatLike; U: FloatLike](a: Measurement[T], b: U): Measurement
 proc copysign*[T: FloatLike; U: FloatLike](a: U, b: Measurement[T]): U =
   result = if signbit(a) != signbit(b): -a else: a
 
-
 proc abs*[T: FloatLike](m: Measurement[T]): Measurement[T] =
   let mval = m.val
-  result = procRes(abs(mval), copysign(mval, 1), m)
+  result = procRes(abs(mval), copysign(mval, 1.T), m)
 
 template comp(fn: untyped): untyped =
   proc `fn`*[T: FloatLike](a, b: Measurement[T]):    bool = result = fn(a.val, b.val)
