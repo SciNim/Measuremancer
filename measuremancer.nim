@@ -327,10 +327,11 @@ func signbit*[T: FloatLike](m: Measurement[T]): bool = m.val.signbit
 proc copysign*[T: FloatLike](a, b: Measurement[T]): Measurement[T] =
   result = if signbit(a) != signbit(b): -a else: a
 
-proc copysign*[T: FloatLike](a: Measurement[T], b: T): Measurement[T] =
+proc copysign*[T: FloatLike; U: FloatLike](a: Measurement[T], b: U): Measurement[T] =
   result = if signbit(a) != signbit(b): -a else: a
-proc copysign*[T: FloatLike](a: T, b: Measurement[T]): Measurement[T] =
+proc copysign*[T: FloatLike; U: FloatLike](a: U, b: Measurement[T]): U =
   result = if signbit(a) != signbit(b): -a else: a
+
 
 proc abs*[T: FloatLike](m: Measurement[T]): Measurement[T] =
   let mval = m.val
