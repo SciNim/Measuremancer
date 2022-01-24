@@ -44,6 +44,18 @@ proc `==`*[T: FloatLike](k1, k2: DerivKey[T]): bool =
   else:
     result = false
 
+## Comparison operators. For two Measurements, only equal if that holds for
+## value and uncertainty.
+## TODO: should we use `almostEqual` here? Or is that too imprecise for the purpose?
+proc `==`*[T: FloatLike](m1, m2: Measurement[T]): bool =
+  result = almostEqual(m1.val, m2.val) and almostEqual(m1.uncer, m2.uncer)
+
+proc `==`*[T: FloatLike](m: Measurement[T], x: T): bool =
+  result = almostEqual(m.val, x) and m.uncer == 0.0
+
+proc `==`*[T: FloatLike](x: T, m: Measurement[T]): bool =
+  result = almostEqual(m.val, x) and m.uncer == 0.0
+
 proc toFloat*[T: SomeFloat](x: T): float = x.float # float is biggest type, so this should be fine
 
 proc initDerivatives[T](): Derivatives[T] = initOrderedTable[DerivKey[T], T]()
