@@ -24,7 +24,7 @@ type
 
   Derivatives[T] = OrderedTable[DerivKey[T], T]
 
-  Measurement[T: FloatLike] = object #{.requiresInit.} = object
+  Measurement*[T: FloatLike] = object
     val: T
     uncer: T
     id: IdType
