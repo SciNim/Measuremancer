@@ -41,6 +41,18 @@ proc hash*[T: FloatLike](key: DerivKey[T]): Hash =
   result = result !& hash(key.tag)
   result = !$result
 
+when (NimMajor, NimMinor, NimPatch) < (1, 6, 0):
+  ## add fallback `almostEqual`, backport from Nim std
+  import fenv
+  func almostEqual*[T: SomeFloat](x, y: T; unitsInLastPlace: Natural = 4): bool {.inline.} =
+    if x == y:
+      # short circuit exact equality -- needed to catch two infinities of
+      # the same sign. And perhaps speeds things up a bit sometimes.
+      return true
+    let diff = abs(x - y)
+    result = diff <= epsilon(T) * abs(x + y) * T(unitsInLastPlace) or
+        diff < minimumPositiveValue(T)
+
 proc `==`*[T: FloatLike](k1, k2: DerivKey[T]): bool =
   if k1.tag == k2.tag and almostEqual(k1.val.float, k2.val.float) and
      almostEqual(k1.uncer.float, k2.uncer.float):
