@@ -310,6 +310,15 @@ proc cos*(m: Measurement): Measurement =
   result = procRes(cos(m.val), -sin(m.val), m)
 
 
+func signbit*[T: FloatLike](m: Measurement[T]): bool = m.val.signbit
+
+proc copysign*[T: FloatLike](a, b: Measurement[T]): Measurement[T] =
+  result = if signbit(a) != signbit(b): -a else: a
+
+proc copysign*[T: FloatLike](a: Measurement[T], b: T): Measurement[T] =
+  result = if signbit(a) != signbit(b): -a else: a
+proc copysign*[T: FloatLike](a: T, b: Measurement[T]): Measurement[T] =
+  result = if signbit(a) != signbit(b): -a else: a
 when isMainModule:
   proc foo[T](x: T, μ, σ: float): T =
     let val = 2 * σ * σ
