@@ -53,6 +53,12 @@ when (NimMajor, NimMinor, NimPatch) < (1, 6, 0):
     result = diff <= epsilon(T) * abs(x + y) * T(unitsInLastPlace) or
         diff < minimumPositiveValue(T)
 
+  proc c_copysign(x, y: cdouble): cdouble {.importc: "copysign", header: "<math.h>".}
+  func copySign*[T: SomeFloat](x, y: T): T {.inline.} =
+    ## Returns a value with the magnitude of `x` and the sign of `y`;
+    ## this works even if x or y are NaN, infinity or zero, all of which can carry a sign.
+    result = c_copysign(x, y)
+
 proc `==`*[T: FloatLike](k1, k2: DerivKey[T]): bool =
   if k1.tag == k2.tag and almostEqual(k1.val.float, k2.val.float) and
      almostEqual(k1.uncer.float, k2.uncer.float):
