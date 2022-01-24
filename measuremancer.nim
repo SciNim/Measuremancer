@@ -303,6 +303,11 @@ proc `^`*[T: FloatLike](a, b: Measurement[T]): Measurement[T] = a ** b
 proc exp*(m: Measurement): Measurement =
   result = procRes(exp(m.val), exp(m.val), m)
 
+proc sin*(m: Measurement): Measurement =
+  result = procRes(sin(m.val), cos(m.val), m)
+
+proc cos*(m: Measurement): Measurement =
+  result = procRes(cos(m.val), -sin(m.val), m)
 
 
 when isMainModule:
