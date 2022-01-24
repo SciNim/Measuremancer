@@ -171,10 +171,21 @@ proc `+`*[T: FloatLike](a, b: Measurement[T]): Measurement[T] =
 # generate helpers
 genOverloadsPlusMinus(`+`)
 
+## mutable assign/addition
+proc `+=`*[T: FloatLike](a: var Measurement[T], b: Measurement[T]) =
+  let tmp = a + b
+  a = tmp
+
 proc `-`*[T: FloatLike](a, b: Measurement[T]): Measurement[T] =
   result = procRes(a.val - b.val, [T(1), T(-1)], [a, b])
 # generate helpers
 genOverloadsPlusMinus(`-`)
+
+## mutable assign/subtraction
+proc `-=`*[T: FloatLike](a: var Measurement[T], b: Measurement[T]) =
+  let tmp = a - b
+  a = tmp
+
 
 ## Type conversion. TODO: make this more type safe, funnily enough
 proc to[T: FloatLike; U](m: Measurement[T], dtype: typedesc[U]): Measurement[U] =
@@ -219,6 +230,15 @@ proc `*`*[T: FloatLike; U: FloatLike](x: T{lit}, m: Measurement[U]): Measurement
   result = procRes(U(x) * m.val, U(x), m)
 proc `*`*[U: FloatLike; T: FloatLike](m: Measurement[U], x: T{lit}): Measurement[U] =
   result = procRes(m.val * U(x), U(x), m)
+
+## mutable assign/multiplication
+proc `*=`*[T: FloatLike](a: var Measurement[T], b: Measurement[T]) =
+  let tmp = a * b
+  a = tmp
+
+proc `*=`*[T: FloatLike](a: var Measurement[T], b: T) =
+  let tmp = a * b
+  a = tmp
 
 
 proc `/`*[T: FloatLike; U: FloatLike](a: Measurement[T], b: Measurement[U]): auto =
