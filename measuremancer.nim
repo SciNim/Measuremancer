@@ -30,6 +30,10 @@ type
     id: IdType
     der: Derivatives[T] # map of the derivatives
 
+func value*[T: FloatLike](m: Measurement[T]): T {.inline.} = m.val
+func uncertainty*[T: FloatLike](m: Measurement[T]): T {.inline.} = m.uncer
+func error*[T: FloatLike](m: Measurement[T]): T {.inline.} = m.uncer
+
 import hashes
 proc hash*[T: FloatLike](key: DerivKey[T]): Hash =
   result = result !& hash(key.val)
