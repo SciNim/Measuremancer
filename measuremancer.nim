@@ -319,6 +319,21 @@ proc copysign*[T: FloatLike](a: Measurement[T], b: T): Measurement[T] =
   result = if signbit(a) != signbit(b): -a else: a
 proc copysign*[T: FloatLike](a: T, b: Measurement[T]): Measurement[T] =
   result = if signbit(a) != signbit(b): -a else: a
+
+proc abs*[T: FloatLike](m: Measurement[T]): Measurement[T] =
+  let mval = m.val
+  result = procRes(abs(mval), copysign(mval, 1), m)
+
+template comp(fn: untyped): untyped =
+  proc `fn`*[T: FloatLike](a, b: Measurement[T]):    bool = result = fn(a.val, b.val)
+  proc `fn`*[T: FloatLike](a: Measurement[T], b: T): bool = result = fn(a.val, b)
+  proc `fn`*[T: FloatLike](a: T, b: Measurement[T]): bool = result = fn(a, b.val)
+  proc `fn`*[T: FloatLike; U: FloatLike](a: Measurement[T], b: U{lit}): bool = result = fn(a.val, T(b))
+  proc `fn`*[T: FloatLike; U: FloatLike](a: U{lit}, b: Measurement[T]): bool = result = fn(T(a), b.val)
+
+comp(`<`)
+comp(`<=`)
+
 when isMainModule:
   proc foo[T](x: T, μ, σ: float): T =
     let val = 2 * σ * σ
