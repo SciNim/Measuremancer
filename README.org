@@ -110,7 +110,7 @@ only supported using multiplication, =*=. For the others the
 implementation is still pending.
 
 
-** Compilation flags
+** Compilation flags & Nim versions prior to 1.6
 
 As of Nim version 1.6 any code using this library has to be compiled
 with:
@@ -120,3 +120,8 @@ with:
 
 Feel free to create a =nim.cfg= in the directory of your program to
 avoid having to set this setting manually every time.
+
+*NOTE*: This flag was not available in Nim 1.4 yet. Unicode operators
+ simply weren't a thing. If you wish to use this library anyway, you
+ can do so, simply by constructing =Measurements= using the
+ =measurement= procedure.
