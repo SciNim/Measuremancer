@@ -161,9 +161,9 @@ template genOverloadsPlusMinus(fn: untyped): untyped =
   proc `fn`*[T: FloatLike](m: Measurement[T], x: T): Measurement[T] = result = procRes(fn(m.val, x), T(1), m)
   ## Overloads for literals that force same type as Measurement has
   proc `fn`*[T: FloatLike; U: FloatLike](x: T{lit}, m: Measurement[U]): Measurement[U] =
-    result = procRes(fn(x, m.val), U(1), m)
+    result = procRes(fn(U(x), m.val), U(1), m)
   proc `fn`*[U: FloatLike; T: FloatLike](m: Measurement[U], x: T{lit}): Measurement[U] =
-    result = procRes(fn(m.val, x), U(1), m)
+    result = procRes(fn(m.val, U(x)), U(1), m)
 
 ## propagation based plainly on operator overload?
 proc `+`*[T: FloatLike](a, b: Measurement[T]): Measurement[T] =
