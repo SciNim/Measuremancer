@@ -264,9 +264,9 @@ proc `*`*[T: FloatLike](m: Measurement[T], x: T): Measurement[T] =
 
 ## Overloads for literals that force same type as Measurement has
 proc `*`*[T: FloatLike; U: FloatLike](x: T{lit}, m: Measurement[U]): Measurement[U] =
-  result = procRes(U(x) * m.val, U(x), m)
+  result = procRes(U(U(x) * m.val), U(x), m)
 proc `*`*[U: FloatLike; T: FloatLike](m: Measurement[U], x: T{lit}): Measurement[U] =
-  result = procRes(m.val * U(x), U(x), m)
+  result = procRes(U(m.val * U(x)), U(x), m)
 
 ## mutable assign/multiplication
 proc `*=`*[T: FloatLike](a: var Measurement[T], b: Measurement[T]) =
@@ -291,9 +291,9 @@ proc `/`*[T: FloatLike; U: FloatLike](m: Measurement[T], x: U): auto =
 
 ## Overloads for literals that force same type as Measurement has
 proc `/`*[T: FloatLike; U: FloatLike](x: T{lit}, m: Measurement[U]): Measurement[U] =
-  result = procRes(U(x) / m.val, U(-x) / (m.val * m.val), m)
+  result = procRes(U(U(x) / m.val), U(-x) / (m.val * m.val), m)
 proc `/`*[U: FloatLike; T: FloatLike](m: Measurement[U], x: T{lit}): Measurement[U] =
-  result = procRes(m.val / U(x), 1.0 / U(x), m)
+  result = procRes(U(m.val / U(x)), 1.0 / U(x), m)
 
 # Power `^`
 ## NOTE: Using any of the following exponentiation functions is dangerous. The Nim parser
