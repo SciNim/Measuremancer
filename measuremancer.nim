@@ -259,6 +259,9 @@ template assign2(valArg, arg1, arg2, m1, m2: untyped): untyped {.dirty.} =
 proc `*`*[T: FloatLike; U: FloatLike](x: T, m: Measurement[U]): auto =
   assign1(x * m.val, x, m)
 
+proc `*`*[T: FloatLike; U: FloatLike](m: Measurement[U], x: T): auto =
+  assign1(x * m.val, x, m)
+
 proc `*`*[T: FloatLike](m: Measurement[T], x: T): Measurement[T] =
   assign1(m.val * x, x, m)
 
