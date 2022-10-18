@@ -161,12 +161,12 @@ proc procRes[T](res: T, grad: openArray[T], args: openArray[Measurement[T]]): Me
             # calc derivative of G w.r.t. current indep. var.
             let ∂a_∂x = derivative(x, key)
             if ∂a_∂x != T(0): # skip values with 0 partial deriv.
-              ∂G_∂x = ∂G_∂x + (grad[i] * ∂a_∂x).T # convert product back to avoid `unchained` error
+              ∂G_∂x = (∂G_∂x + (grad[i] * ∂a_∂x).T).T # convert product back to avoid `unchained` error
                                                   # technically this is a product after all
           if ∂G_∂x != T(0):
             # add (σ_x•∂G/∂x)² to total uncertainty (squared), but only if deriv != 0
             resder[key] = ∂G_∂x
-            err = err + ((σ_x * ∂G_∂x) * (σ_x * ∂G_∂x)).T # convert product back to avoid `unchained` error
+            err = (err + ((σ_x * ∂G_∂x) * (σ_x * ∂G_∂x)).T).T # convert product back to avoid `unchained` error
   result = initMeasurement[T](res,
                               T(sqrt(err.float)), # convert to float and back to T to satisfy `unchained`
                               resder, 0'u32)
@@ -257,6 +257,9 @@ template assign2(valArg, arg1, arg2, m1, m2: untyped): untyped {.dirty.} =
 
 # helper overloads
 proc `*`*[T: FloatLike; U: FloatLike](x: T, m: Measurement[U]): auto =
+  assign1(x * m.val, x, m)
+
+proc `*`*[T: FloatLike; U: FloatLike](m: Measurement[U], x: T): auto =
   assign1(x * m.val, x, m)
 
 proc `*`*[T: FloatLike](m: Measurement[T], x: T): Measurement[T] =
