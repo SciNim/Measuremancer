@@ -105,9 +105,9 @@ which yields:
 m * a: 9.81 ± 0.982 KiloGram•Meter•Second⁻²
 #+end_src
 
-*NOTE*: Measurement math with different =unchained= units is currently
-only supported using multiplication, =*=. For the others the
-implementation is still pending.
+*NOTE*: With units as complicated as =unchained's= types, there is
+still a chance of things breaking. Basic math (=*=, =/=, =+= and =-=)
+should work correctly now though.
 
 
 ** Compilation flags & Nim versions prior to 1.6

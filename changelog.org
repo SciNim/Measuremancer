@@ -1,0 +1,5 @@
+* v0.1.1
+- fix division operation of measurements of units like =unchained= units
+* v0.1.0
+- initial working version of the library. Supports basic math of
+  measurements and some trigonometric functions.
