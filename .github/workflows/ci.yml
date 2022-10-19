@@ -22,11 +22,11 @@ jobs:
         target: [linux, macos, windows]
         include:
           - target: linux
-            builder: ubuntu-latelst
+            builder: ubuntu-latest
           - target: macos
-            builder: macos-latelst
+            builder: macos-latest
           - target: windows
-            builder: windows-latelst
+            builder: windows-latest
     name: '${{ matrix.target }} (${{ matrix.branch }})'
     runs-on: ${{ matrix.builder }}
     steps:
