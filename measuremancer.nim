@@ -262,9 +262,6 @@ proc `*`*[T: FloatLike; U: FloatLike](x: T, m: Measurement[U]): auto =
 proc `*`*[T: FloatLike; U: FloatLike](m: Measurement[U], x: T): auto =
   assign1(x * m.val, x, m)
 
-proc `*`*[T: FloatLike](m: Measurement[T], x: T): Measurement[T] =
-  assign1(m.val * x, x, m)
-
 ## Overloads for literals that force same type as Measurement has
 proc `*`*[T: FloatLike; U: FloatLike](x: T{lit}, m: Measurement[U]): Measurement[U] =
   result = procRes(U(U(x) * m.val), U(x), m)
@@ -320,16 +317,112 @@ proc `**`*[T: FloatLike](a, b: Measurement[T]): Measurement[T] =
 proc `^`*[T: FloatLike](a, b: Measurement[T]): Measurement[T] = a ** b
 
 # TODO: need to add a lot more primitive functions
-# Primitives
-proc exp*(m: Measurement): Measurement =
-  result = procRes(exp(m.val), exp(m.val), m)
 
-proc sin*(m: Measurement): Measurement =
-  result = procRes(sin(m.val), cos(m.val), m)
+## Now generate single argument (mostly trigonometric) functions
+## They all follow the following structure
+## ```
+##   proc exp*(m: Measurement): Measurement =
+##     result = procRes(exp(m.val), exp(m.val), m)
+## ```
+## where the derivatives are taken from the 'lookup table' below.
 
-proc cos*(m: Measurement): Measurement =
-  result = procRes(cos(m.val), -sin(m.val), m)
+import std / macros
+template genCall(fn, letStmt, x, m, deriv: untyped): untyped =
+  proc `fn`*[T](m: Measurement[T]): Measurement[T] =
+    ## letStmt contains the definition of x, `let x = m.val`
+    letStmt
+    ## `deriv` is handed as an expression containing `x`
+    result = procRes(fn(x), deriv, m)
 
+macro defineSupportedFunctions(body: untyped): untyped =
+  result = newStmtList()
+  for fn in body:
+    doAssert fn.kind == nnkInfix and fn[0].strVal == "->"
+    let fnName = fn[1].strVal
+    let fnId = ident(fnName)
+    # generate the code
+    let deriv = fn[2]
+    let xId = ident"x"
+    let mId = ident"m"
+    let xLet = quote do:
+      let `xId` = `mId`.val
+    let ast = getAst(genCall(fnId, xLet, xId, mId, deriv))
+    result.add ast
+
+## NOTE: some of the following functions are not implemented in Nim atm, hence
+## they are commented out.
+## This is based on the same in `astgrad`, which itself took the map from
+## somewhere else. Need to look up where that was, oops.
+defineSupportedFunctions:
+  sqrt        ->  1.0 / 2.0 / sqrt(x)
+  cbrt        ->  1.0 / 3.0 / (cbrt(x)^2.0)
+  abs2        ->  1.0 * 2.0 * x
+  inv         -> -1.0 * abs2(inv(x))
+  log         ->  1.0 / x
+  log10       ->  1.0 / x / log(10)
+  log2        ->  1.0 / x / log(2.0)
+  log1p       ->  1.0 / (x + 1.0)
+  exp         ->  exp(x)
+  exp2        ->  log(2.0) * exp2(x)
+  expm1       ->  exp(x)
+  sin         ->  cos(x)
+  cos         -> -sin(x)
+  tan         ->  (1.0 + (tan(x)^2))
+  sec         ->  sec(x) * tan(x)
+  csc         -> -csc(x) * cot(x)
+  cot         -> -(1.0 + (cot(x)^2))
+  #sind        ->  Pi / 180.0 * cosd(x)
+  #cosd        -> -Pi / 180.0 * sind(x)
+  #tand        ->  Pi / 180.0 * (1.0 + (tand(x)^2))
+  #secd        ->  Pi / 180.0 * secd(x) * tand(x)
+  #cscd        -> -Pi / 180.0 * cscd(x) * cotd(x)
+  #cotd        -> -Pi / 180.0 * (1.0 + (cotd(x)^2))
+  arcsin      ->  1.0 / sqrt(1.0 - (x^2))
+  arccos      -> -1.0 / sqrt(1.0 - (x^2))
+  arctan      ->  1.0 / (1.0 + (x^2))
+  arcsec      ->  1.0 / abs(x) / sqrt(x^2 - 1.0)
+  arccsc      -> -1.0 / abs(x) / sqrt(x^2 - 1.0)
+  arccot      -> -1.0 / (1.0 + (x^2))
+  #arcsind     ->  180.0 / Pi / sqrt(1.0 - (x^2))
+  #arccosd     -> -180.0 / Pi / sqrt(1.0 - (x^2))
+  #arctand     ->  180.0 / Pi / (1.0 + (x^2))
+  #arcsecd     ->  180.0 / Pi / abs(x) / sqrt(x^2 - 1.0)
+  #arccscd     -> -180.0 / Pi / abs(x) / sqrt(x^2 - 1.0)
+  #arccotd     -> -180.0 / Pi / (1.0 + (x^2))
+  sinh        ->  cosh(x)
+  cosh        ->  sinh(x)
+  tanh        ->  sech(x)^2
+  sech        -> -tanh(x) * sech(x)
+  csch        -> -coth(x) * csch(x)
+  coth        -> -(csch(x)^2)
+  arcsinh     ->  1.0 / sqrt(x^2 + 1.0)
+  arccosh     ->  1.0 / sqrt(x^2 - 1.0)
+  arctanh     ->  1.0 / (1.0 - (x^2))
+  arcsech     -> -1.0 / x / sqrt(1.0 - (x^2))
+  arccsch     -> -1.0 / abs(x) / sqrt(1.0 + (x^2))
+  arccoth     ->  1.0 / (1.0 - (x^2))
+  deg2rad     ->  Pi / 180.0
+  rad2deg     ->  180.0 / Pi
+  erf         ->  2.0 * exp(-x*x) / sqrt(Pi)
+  erfinv      ->  0.5 * sqrt(Pi) * exp(erfinv(x) * erfinv(x))
+  erfc        -> -2.0 * exp(-x*x) / sqrt(Pi)
+  erfcinv     -> -0.5 * sqrt(Pi) * exp(erfcinv(x) * erfcinv(x))
+  erfi        ->  2.0 * exp(x*x) / sqrt(Pi)
+  #gamma       ->  digamma(x) * gamma(x)
+  #lgamma      ->  digamma(x)
+  #digamma     ->  trigamma(x)
+  #invdigamma  ->  inv(trigamma(invdigamma(x)))
+  #trigamma    ->  polygamma(2.0 x)
+  #airyai      ->  airyaiprime(x)
+  #airybi      ->  airybiprime(x)
+  #airyaiprime ->  x * airyai(x)
+  #airybiprime ->  x * airybi(x)
+  #besselj0    -> -besselj1(x)
+  #besselj1    ->  (besselj0(x) - besselj(2.0, x)) / 2.0
+  #bessely0    -> -bessely1(x)
+  #bessely1    ->  (bessely0(x) - bessely(2.0, x)) / 2.0
+  #erfcx       ->  (2.0 * x * erfcx(x) - 2.0 / sqrt(Pi))
+  #dawson      ->  (1.0 - 2.0 * x * dawson(x))
 
 func signbit*[T: FloatLike](m: Measurement[T]): bool = m.val.signbit
 
