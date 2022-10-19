@@ -1,4 +1,4 @@
-import measuremancer
+import ../measuremancer
 import std / unittest
 import std / math
 
@@ -137,7 +137,6 @@ suite "Measurements of other types (e.g. unchained)":
     check k1 + k2 =~= 7.5.keV ± 1.802775637731995.keV
     check( (k1 + k2).value.type is keV )
     check( (k1 + k2).error.type is keV )
-    print k1 + k2
 
   test "Addition of incompatible units fails":
     let k1 = 5.0.keV ± 1.0.keV
