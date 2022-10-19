@@ -474,13 +474,15 @@ when isMainModule:
   print 2 / x1
   print x1 / 2
 
-  import unchained
-  let k1 = 5.0.keV ± 1.0.keV
-  let k2 = 2.5.keV ± 1.5.keV
-  print k1 + k2
 
-  print foo(x1, 33.333, 100.0)
-  print exp(- x1*x1 / (2 * 100.0 * 100.0))
+  when false:
+    import unchained
+    let k1 = 5.0.keV ± 1.0.keV
+    let k2 = 2.5.keV ± 1.5.keV
+    print k1 + k2
+
+    print foo(x1, 33.333, 100.0)
+    print exp(- x1*x1 / (2 * 100.0 * 100.0))
 
   when false:
     import arraymancer
