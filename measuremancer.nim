@@ -262,9 +262,6 @@ proc `*`*[T: FloatLike; U: FloatLike](x: T, m: Measurement[U]): auto =
 proc `*`*[T: FloatLike; U: FloatLike](m: Measurement[U], x: T): auto =
   assign1(x * m.val, x, m)
 
-proc `*`*[T: FloatLike](m: Measurement[T], x: T): Measurement[T] =
-  assign1(m.val * x, x, m)
-
 ## Overloads for literals that force same type as Measurement has
 proc `*`*[T: FloatLike; U: FloatLike](x: T{lit}, m: Measurement[U]): Measurement[U] =
   result = procRes(U(U(x) * m.val), U(x), m)
