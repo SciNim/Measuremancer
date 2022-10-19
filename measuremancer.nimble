@@ -9,9 +9,8 @@ license       = "MIT"
 
 requires "nim >= 1.4.0"
 
-task testCI, "Run standard tests in CI (installs unchained)":
+task testDeps, "Installs dependencies for tests":
   exec "nimble install -y unchained"
-  exec "nim c -r tests/tmeasuremancer.nim"
 
 task test, "Run standard tests":
   exec "nim c -r tests/tmeasuremancer.nim"
