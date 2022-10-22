@@ -18,7 +18,9 @@ type
   FloatLike* = concept x
     x.toFloat is float
 
-  IdType = uint64 # "`uint64` should be enough for everyone... uhhh"
+  # `IdType` is a unique ID associated to every *independent* measurement. Every *dependent*
+  # measurement has ID = 0!
+  IdType = uint64
 
   DerivKey[T] = tuple[val, uncer: T, tag: IdType]
 
@@ -91,24 +93,55 @@ proc changeType[T; U](tab: Derivatives[T], dtype: typedesc[U]): Derivatives[U] =
     let nkey = (val: key.val.U, uncer: key.uncer.U, tag: key.tag)
     result[nkey] = val.U
 
-var idCounter = 0'u64
-proc initMeasurement[T](val, uncer: T, der = initDerivatives[T](),
-                        id = uint64.high): Measurement[T] =
-  var id = if id == uint64.high: idCounter else: id # use id only if it's manually entered
-  inc idCounter
+var idCounter {.compileTime.} = 0'u64
+const HighId = uint64.high
+func initMeasurementImpl[T](val, uncer: T, der: Derivatives[T], id: uint64): Measurement[T] =
+  {.cast(noSideEffect).}:
+    debugecho "FROM WITH ID ", id, " and ", idCounter
   # create new `Derivatives` containing element itself if no elements in `der`
   let der = if der.len == 0: { (val: val, uncer: uncer, tag: id) : T(1) }.toOrderedTable
             else: der
   result = Measurement[T](val: val, uncer: uncer, id: id, der: der)
 
-proc procRes[T](res: T, grad: T, arg: Measurement[T]): Measurement[T] =
+#func initMeasurement[T](val, uncer: T, der: Derivatives[T] = initDerivatives[T]()): Measurement[T] =
+#  ## If no `id` given, use the current ID counter to start anew
+#  const id = idCounter # get current ID value
+#  debugecho "From NO ID ", id
+#  result = initMeasurement(val, uncer, der, id)
+
+import std / macros
+
+#var Tab {.compileTime.} = initTable[string, uint64]()
+#macro initMeasurement(val, uncer, der, id: typed): untyped =
+#  inc idCounter
+#  Tab[val.lineInfo] = id
+#  result = quote do:
+#    initMeasurementImpl(`val`, `uncer`, `der`, `id`)
+#
+
+macro initMeasurement(val, uncer, der, id: typed): untyped =
+  #Tab[val.lineInfo] = id
+  result = quote do:
+    initMeasurementImpl(`val`, `uncer`, `der`, `id`)
+
+macro initMeasurement(val, uncer, der: typed): untyped =
+  #Tab[val.lineInfo] = id
+  result = quote do:
+    initMeasurementImpl(`val`, `uncer`, `der`, `idCounter`)
+
+macro initMeasurement(val, uncer: typed): untyped =
+  #Tab[val.lineInfo] = id
+  result = quote do:
+    initMeasurementImpl(`val`, `uncer`, initDerivatives[typeof(`val`)](), `idCounter`)
+
+func procRes[T](res: T, grad: T, arg: Measurement[T]): Measurement[T] =
   var der = initDerivatives[T]()
   for key, val in pairs(arg.der):
     if key.uncer != T(0.0):
       der[key] = (grad * val).T # force to `T` to avoid `unchained` errors
   # σ is 0 if input's σ is zero, else it's ∂(f(x))/∂x * Δx =^= grad * arg.uncer
   let σ = if arg.uncer == T(0.0): T(0.0) else: abs((grad * arg.uncer).T) # force to `T` to avoid `unchained` errors
-  result = initMeasurement[T](res, σ, der, 0'u32)
+  result = initMeasurement[T](res, σ, der, 0'u64)
 
 proc derivative[T](a: Measurement[T], key: DerivKey[T]): T =
   result = if key in a.der: a.der[key] else: T(0.0)
@@ -138,9 +171,9 @@ when false:
               # add (σ_x•∂G/∂x)² to total uncertainty (squared), but only if deriv != 0
               resder[key] = ∂G_∂x
               err = err + ((σ_x * ∂G_∂x) * (σ_x * ∂G_∂x)) # convert product back to avoid `unchained` error
-    result = initMeasurement[T](res, sqrt(err), resder, 0'u32)
+    result = initMeasurement[T](res, sqrt(err), resder, 0'u64)
 
-proc procRes[T](res: T, grad: openArray[T], args: openArray[Measurement[T]]): Measurement[T] =
+func procRes[T](res: T, grad: openArray[T], args: openArray[Measurement[T]]): Measurement[T] =
   ## Note: In the body of this we perform rather funny back and forth conversions between `T`
   ## and sometimes float. This is because in `unchained` we generate new units for math operations.
   ## While this is fine in principle, it's too difficult to satisfy `unchained` CT safety logic
@@ -169,17 +202,38 @@ proc procRes[T](res: T, grad: openArray[T], args: openArray[Measurement[T]]): Me
             err = (err + ((σ_x * ∂G_∂x) * (σ_x * ∂G_∂x)).T).T # convert product back to avoid `unchained` error
   result = initMeasurement[T](res,
                               T(sqrt(err.float)), # convert to float and back to T to satisfy `unchained`
-                              resder, 0'u32)
+                              resder, 0'u64)
 
-proc `±`*[T: FloatLike](val, uncer: T): Measurement[T] =
-  result = initMeasurement[T](val, uncer)
+when false:
+  proc `±`*[T: FloatLike](val, uncer: T): Measurement[T] =
+    result = initMeasurement[T](val, uncer)
+
+  ## Do we want the following? It forces any `FloatLike` to generate a `Measurement[float]`!
+  proc `±`*[T: FloatLike](val, uncer: T{lit}): Measurement[float] =
+    result = initMeasurement[float](val.float, uncer.float, initDerivatives[float]())
+
+  proc measurement*[T: FloatLike](value, uncertainty: T): Measurement[T] =
+    result = initMeasurement[float](value, uncertainty)
+
+macro `±`*[T: FloatLike](val, uncer: T): Measurement[T] =
+  inc idCounter
+  result = quote do:
+    initMeasurementImpl[typeof(`val`)](`val`, `uncer`, initDerivatives[typeof(`val`)](), `idCounter`)
 
 ## Do we want the following? It forces any `FloatLike` to generate a `Measurement[float]`!
-proc `±`*[T: FloatLike](val, uncer: T{lit}): Measurement[float] =
-  result = initMeasurement[float](val.float, uncer.float)
+macro `±`*[T: FloatLike](val, uncer: T{lit}): untyped = #Measurement[float] =
+  inc idCounter
+  result = quote do:
+    initMeasurementImpl[typeof(`val`)](`val`, `uncer`, initDerivatives[float](), `idCounter`)
 
-proc measurement*[T: FloatLike](value, uncertainty: T): Measurement[T] =
-  result = initMeasurement[float](value, uncertainty)
+#  result = initMeasurement[float](val.float, uncer.float, initDerivatives[float]())
+
+
+macro measurement*[T: FloatLike](value, uncertainty: T): Measurement[T] =
+  inc idCounter
+  result = quote do:
+    initMeasurementImpl[float](`value`, `uncertainty`, initDerivatives[float](), `idCounter`)
+
 
 proc pretty*[T: FloatLike](m: Measurement[T], precision: int): string =
   let mval = m.val.float.formatBiggestFloat(precision = precision)
@@ -326,7 +380,6 @@ proc `^`*[T: FloatLike](a, b: Measurement[T]): Measurement[T] = a ** b
 ## ```
 ## where the derivatives are taken from the 'lookup table' below.
 
-import std / macros
 template genCall(fn, letStmt, x, m, deriv: untyped): untyped =
   proc `fn`*[T](m: Measurement[T]): Measurement[T] =
     ## letStmt contains the definition of x, `let x = m.val`
