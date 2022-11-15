@@ -295,7 +295,7 @@ proc `/`*[T: FloatLike; U: FloatLike](x: T{lit}, m: Measurement[U]): Measurement
 proc `/`*[U: FloatLike; T: FloatLike](m: Measurement[U], x: T{lit}): Measurement[U] =
   result = procRes(U(m.val / U(x)), 1.0 / U(x), m)
 
-# Power `^`
+# Power & Exponential `^`
 ## NOTE: Using any of the following exponentiation functions is dangerous. The Nim parser
 ## might include an additional prefix into the argument to `^` instead of keeping it as a,
 ## well, prefix. So `-(x - μ)^2` is parsed as `(-(x - μ))^2`!
@@ -303,16 +303,25 @@ proc `**`*[T: FloatLike](m: Measurement[T], p: Natural): Measurement[T] =
   result = procRes(m.val ^ p, p.float * m.val ^ (p - 1), m)
 proc `^`*[T: FloatLike](m: Measurement[T], p: Natural): Measurement[T] = m ** p
 
+proc `**`*[T: FloatLike](m: Natural, p: Measurement[T]): Measurement[T] =
+  let powV = pow(m, p.val)
+  result = procRes(powV, powV * ln(m), p)
+proc `^`*[T: FloatLike](m: Natural, p: Measurement[T]): Measurement[T] = m ** p
+
 proc `**`*[T: FloatLike](m: Measurement[T], p: FloatLike): Measurement[T] =
-  result = procRes(pow(m.val, p), p * pow(m.val, (p - 1.0)), m)
+  result = procRes(pow(m.val.float, p), p * pow(m.val.float, (p - 1.0)), m)
 proc `^`*[T: FloatLike](m: Measurement[T], p: FloatLike): Measurement[T] = m ** p
 
+proc `**`*[T: FloatLike](m: FloatLike, p: Measurement[T]): Measurement[T] =
+  let powV = pow(m, p.val)
+  result = procRes(powV, powV * ln(m), p)
+proc `^`*[T: FloatLike](m: FloatLike, p: Measurement[T]): Measurement[T] = m ** p
 
 proc `**`*[T: FloatLike](a, b: Measurement[T]): Measurement[T] =
   let powV = pow(a.val, b.val)
   result = procRes(powV,
-                   [pow(a.val, b.val - 1.0),
-                    powV * log(a.val)],
+                   [b.val * pow(a.val, b.val - 1.0),
+                    powV * ln(a.val)],
                    [a, b])
 proc `^`*[T: FloatLike](a, b: Measurement[T]): Measurement[T] = a ** b
 

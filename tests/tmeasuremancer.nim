@@ -2,6 +2,7 @@ import ../measuremancer
 import std / unittest
 import std / math
 
+
 proc `=~=`[T](a, b: Measurement[T]): bool =
   # echo a.value.float, " ± ", a.error.float, " and ", b.value.float, " ± ", b.error.float
   result = almostEqual(a.value.float, b.value.float) and almostEqual(a.error.float, b.error.float)
@@ -35,10 +36,7 @@ suite "Measurement & constant":
     let x = 5.0 ± 0.5
     let y = 2.0
     check x ** y == 25.0 ± 5.0
-    when compiles((block:
-      check y ** x # TODO check expected result
-    )): check true
-    else: check false
+    check y ** x == 32.0 ± 11.090354888959125
 
   test "Log":
     let x = 5.0 ± 0.5
@@ -90,11 +88,8 @@ suite "Measurement & measurement":
   test "Power":
     let x = 5.0 ± 0.5
     let y = 2.0 ± 0.5
-    when compiles((block:
-      check x ** y # TODO check expected result
-      check y ** x # TODO check expected result
-    )): check true
-    else: check false
+    check x ** y == 25.0 ± 20.72999937432251
+    check y ** x == 30.0 ± 41.5089866361859
 
   test "Log":
     let x = 5.0 ± 0.5
@@ -129,10 +124,7 @@ suite "Measurement and same symbol":
 
   test "Power":
     let x = 5.0 ± 0.5
-    when compiles((block:
-      check x ** x == 25.0 ± 5.0 # check expected result
-    )): check true
-    else: check false
+    check x ** x == 3125.0 ± 4077.2467381782817
 
   test "Log":
     let x = 5.0 ± 0.5
@@ -222,10 +214,14 @@ suite "[Unchained] Measurement & constant":
 
   test "Power":
     let x = 5.0.m ± 0.5.m
-    let y = 2.0.m
+    let y = 2.0
+    let ym = y.m
+    # Should not compile when exponent has unit
+    when compiles(x ** ym): check false
+    when compiles(ym ** x): check false
+    when compiles(y ** x): check false
     when compiles((block:
-      check x ** y == 25.0.m ± 5.0.m
-      check y ** x == 1.0.m ± 0.1.m # check expected result
+      check x ** y == 25.0.m² ± 5.0.m²
     )): check true
     else: check false
 
@@ -278,12 +274,12 @@ suite "[Unchained] Measurement & measurement":
 
   test "Power":
     let x = 5.0.m ± 0.5.m
-    let y = 2.0.m ± 0.5.m
-    when compiles((block:
-      check x ** y == 25.0.m ± 5.0.m # check expected result
-      check y ** x == 1.0.m ± 0.1.m # check expected result
-    )): check true
-    else: check false
+    let y = 2.0 ± 0.5
+    let ym = y.value.m ± y.error.m
+    when compiles(x ** ym): check false
+    when compiles(ym ** x): check false
+    when compiles(y ** x): check false
+    check x ** y == 25.0.mm² ± 20.72999937432251.mm²
 
   test "Log":
     let x = 5.0.m ± 0.5.m
