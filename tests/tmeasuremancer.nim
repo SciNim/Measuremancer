@@ -2,6 +2,7 @@ import ../measuremancer
 import std / unittest
 import std / math
 
+
 proc `=~=`[T](a, b: Measurement[T]): bool =
   # echo a.value.float, " ± ", a.error.float, " and ", b.value.float, " ± ", b.error.float
   result = almostEqual(a.value.float, b.value.float) and almostEqual(a.error.float, b.error.float)
@@ -30,6 +31,24 @@ suite "Measurement & constant":
     let y = 5.0
     check x / y == 1.0 ± 0.1
     check y / x == 1.0 ± 0.1
+
+  test "Power":
+    let x = 5.0 ± 0.5
+    let y = 2.0
+    check x ** y == 25.0 ± 5.0
+    check y ** x == 32.0 ± 11.090354888959125
+
+  test "Log":
+    let x = 5.0 ± 0.5
+    let y = 2.0
+    # something weird here
+    # log(x) complains missing second argument (base)
+    # log(x, y) complains extra argument given (position 2)
+    when compiles((block:
+      check log(x, y) # TODO check expected result
+      check log(y, x) # TODO check expected result
+    )): check true
+    else: check false
 
 suite "Measurement & measurement":
   test "Addition":
@@ -66,6 +85,24 @@ suite "Measurement & measurement":
     # √( 0.5² / 1.0² + 5.0² · 0.1² / 1.0⁴ ) = √ 0.5 = 0.707106781187
     check y / x =~= 5.0 ± 0.7071067811865476
 
+  test "Power":
+    let x = 5.0 ± 0.5
+    let y = 2.0 ± 0.5
+    check x ** y == 25.0 ± 20.72999937432251
+    check y ** x == 30.0 ± 41.5089866361859
+
+  test "Log":
+    let x = 5.0 ± 0.5
+    let y = 2.0 ± 0.5
+    # something weird here
+    # log(x) complains missing second argument (base)
+    # log(x, y) complains extra argument given (position 2)
+    when compiles((block:
+      check log(x, y) # TODO check expected result
+      check log(y, x) # TODO check expected result
+    )): check true
+    else: check false
+
 suite "Measurement and same symbol":
   # Simple correlations due to same symbol being used are correctly handled.
   # i.e. subtraction and division results in a measurement without error.
@@ -84,6 +121,20 @@ suite "Measurement and same symbol":
   test "Division":
     let x = 1.0 ± 0.1
     check x / x =~= 1.0 ± 0.0
+
+  test "Power":
+    let x = 5.0 ± 0.5
+    check x ** x == 3125.0 ± 4077.2467381782817
+
+  test "Log":
+    let x = 5.0 ± 0.5
+    # something weird here
+    # log(x) complains missing second argument (base)
+    # log(x, y) complains extra argument given (position 2)
+    when compiles((block:
+      check log(x, x) # TODO check expected result
+    )): check true
+    else: check false
 
 suite "Trigonometric functions of measurements":
   test "sin":
@@ -130,8 +181,219 @@ suite "More complicated examples":
     check foo(x1, 33.333, 100.0) =~= exp(- x1*x1 / (2 * 100.0 * 100.0))
 
 import unchained
-suite "Measurements of other types (e.g. unchained)":
-  test "Addiiton of unchained units":
+
+# can't access .val attribute, must rely on .value func
+# this should be fixed in lib
+proc `==`[T: FloatLike](m1, m2: Measurement[T]): bool =
+  result = almostEqual(m1.value.float, m2.value.float) and almostEqual(m1.error.float, m2.error.float)
+
+suite "[Unchained] Measurement & constant":
+  test "Addition":
+    let x = 1.0.m ± 0.1.m
+    let y = 5.0.m
+    check x + y == 6.0.m ± 0.1.m
+    check y + x == 6.0.m ± 0.1.m
+
+  test "Subtraction":
+    let x = 1.0.m ± 0.1.m
+    let y = 5.0.m
+    check x - y == -4.0.m ± 0.1.m
+    check y - x == 4.0.m ± 0.1.m
+
+  test "Multiplication":
+    let x = 1.0.m ± 0.1.m
+    let y = 5.0.m
+    check x * y == 5.0.m² ± 0.5.m²
+    check y * x == 5.0.m² ± 0.5.m²
+
+  test "Division":
+    let x = 5.0.m ± 0.5.m
+    let y = 5.0.m
+    check x / y == 1.0.UnitLess ± 0.1.UnitLess
+    check y / x == 1.0.UnitLess ± 0.1.UnitLess
+
+  test "Power":
+    let x = 5.0.m ± 0.5.m
+    let y = 2.0
+    let ym = y.m
+    # Should not compile when exponent has unit
+    when compiles(x ** ym): check false
+    when compiles(ym ** x): check false
+    when compiles(y ** x): check false
+    when compiles((block:
+      check x ** y == 25.0.m² ± 5.0.m²
+    )): check true
+    else: check false
+
+  test "Log":
+    let x = 5.0.m ± 0.5.m
+    let y = 2.0.m
+    # something weird here
+    # log(x) complains missing second argument (base)
+    # log(x, y) complains extra argument given (position 2)
+    when compiles((block:
+      check log(x, y) # TODO check expected result
+      check log(y, x) # TODO check expected result
+    )): check true
+    else: check false
+
+suite "[Unchained] Measurement & measurement":
+  test "Addition":
+    let x = 1.0.m ± 0.1.m
+    let y = 5.0.m ± 0.5.m
+    # This should be:
+    # √( 0.1² + 0.5² )
+    check x + y =~= 6.0.m ± 0.5099019513592785.m
+    check y + x =~= 6.0.m ± 0.5099019513592785.m
+
+  test "Subtraction":
+    let x = 1.0.m ± 0.1.m
+    let y = 5.0.m ± 0.5.m
+    # This should be:
+    # √( 0.1² + 0.5² )
+    check x - y =~= -4.0.m ± 0.5099019513592785.m
+    check y - x =~=  4.0.m ± 0.5099019513592785.m
+
+  test "Multiplication":
+    let x = 1.0.m ± 0.1.m
+    let y = 5.0.m ± 0.5.m
+    # This should be:
+    # √( 1.0² · 0.5² + 5.0² · 0.1² ) = √ 0.5
+    check x * y == 5.0.m² ± sqrt(0.5).m²
+    check y * x == 5.0.m² ± sqrt(0.5).m²
+
+  test "Division":
+    let x = 1.0.m ± 0.1.m
+    let y = 5.0.m ± 0.5.m
+    # This should be:
+    # √( 0.1² / 5.0² + 1.0² · 0.5² / 5.0⁴ ) = √ 8e-4 = 0.0282842712475
+    check x / y =~= 0.2.UnitLess ± 0.02828427124746191.UnitLess
+    # This should be:
+    # √( 0.5² / 1.0² + 5.0² · 0.1² / 1.0⁴ ) = √ 0.5 = 0.707106781187
+    check y / x =~= 5.0.UnitLess ± 0.7071067811865476.UnitLess
+
+  test "Power":
+    let x = 5.0.m ± 0.5.m
+    let y = 2.0 ± 0.5
+    let ym = y.value.m ± y.error.m
+    when compiles(x ** ym): check false
+    when compiles(ym ** x): check false
+    when compiles(y ** x): check false
+    check x ** y == 25.0.mm² ± 20.72999937432251.mm²
+
+  test "Log":
+    let x = 5.0.m ± 0.5.m
+    let y = 2.0.m ± 0.5.m
+    # something weird here
+    # log(x) complains missing second argument (base)
+    # log(x, y) complains extra argument given (position 2)
+    when compiles((block:
+      check log(x, y) # TODO check expected result
+      check log(y, x) # TODO check expected result
+    )): check true
+    else: check false
+
+suite "[Unchained] Measurement and same symbol":
+  # Simple correlations due to same symbol being used are correctly handled.
+  # i.e. subtraction and division results in a measurement without error.
+  test "Addition":
+    let x = 1.0.m ± 0.1.m
+    check x + x =~= 2.0.m ± 0.2.m
+
+  test "Subtraction":
+    let x = 1.0.m ± 0.1.m
+    check x - x == 0.0.m ± 0.0.m
+
+  test "Multiplication":
+    let x = 1.0.m ± 0.1.m
+    check x * x =~= 1.0.m² ± 0.2.m²
+
+  test "Division":
+    let x = 1.0.m ± 0.1.m
+    check x / x =~= 1.0.UnitLess ± 0.0.UnitLess
+
+  test "Power":
+    let x = 5.0.m ± 0.5.m
+    when compiles((block:
+      check x ** x == 25.0.m ± 5.0.m # check expected result
+    )): check true
+    else: check false
+
+  test "Log":
+    let x = 5.0.m ± 0.5.m
+    # something weird here
+    # log(x) complains missing second argument (base)
+    # log(x, y) complains extra argument given (position 2)
+    when compiles((block:
+      check log(x, x) # TODO check expected result
+    )): check true
+    else: check false
+
+suite "[Unchained] Trigonometric functions of measurements":
+  test "sin":
+    let x = 1.0.m ± 0.1.m
+    # This should be:
+    # √ (cos²(1.0) · 0.1²)
+    when compiles((block:
+      check sin(x) =~= sin(1.0).m ± sqrt(cos(1.0)^2 * 0.1^2).m # 0.05403023058681398
+    )): check true
+    else: check false
+
+  test "cos":
+    let x = 1.0.m ± 0.1.m
+    # This should be:
+    # √ (sin²(1.0) · 0.1²)
+    when compiles((block:
+      check cos(x) =~= cos(1.0).m ± sqrt(sin(1.0)^2 * 0.1^2).m
+    )): check true
+    else: check false
+
+  test "tan":
+    let x = 1.0.m ± 0.1.m
+    # This should be:
+    # √ ( (1.0 + tan(1.0)²)² · 0.1² )
+    when compiles((block:
+      check tan(x) =~= tan(1.0).m ± sqrt(( (1.0 + tan(1.0)^2)^2 * 0.1^2) ).m
+    )): check true
+    else: check false
+
+  ## And so on. The general error for these functions is simply the
+  ## √ (∂f/∂x² Δx²)
+  ## where the derivative can be looked up in the table in the main source file.
+  test "sinh":
+    let x = 1.0.m ± 0.1.m
+    when compiles((block:
+      check sinh(x) =~= sinh(1.0).m ± sqrt(( cosh(1.0)^2 * 0.1^2) ).m
+    )): check true
+    else: check false
+
+  test "cosh":
+    let x = 1.0.m ± 0.1.m
+    when compiles((block:
+      check cosh(x) =~= cosh(1.0).m ± sqrt(( sinh(1.0)^2 * 0.1^2) ).m
+    )): check true
+    else: check false
+
+  test "arccos":
+    let x = 0.5.m ± 0.1.m
+    when compiles((block:
+       check arccos(x) =~= arccos(0.5).m ± sqrt( (-1.0 / sqrt(1.0 - (0.5^2)))^2 * 0.1^2 ).m
+    )): check true
+    else: check false
+  
+  test "Function with measurement computing a gaussian":
+    proc foo[T](x: T, μ, σ: float): T =
+      let val = 2 * σ * σ
+      result = exp(- (x*x) / val ) #/ (2 * σ^2))
+
+    let x1 = 5.0.m ± 1.0.m
+    when compiles((block:
+      check foo(x1, 33.333, 100.0) =~= 0.9987507809245809 ± 0.0004993753904622905
+      check foo(x1, 33.333, 100.0) =~= exp(- x1*x1 / (2 * 100.0 * 100.0))
+    )): check true
+    else: check false
+
+  test "Addition of unchained units":
     let k1 = 5.0.keV ± 1.0.keV
     let k2 = 2.5.keV ± 1.5.keV
     check k1 + k2 =~= 7.5.keV ± 1.802775637731995.keV
