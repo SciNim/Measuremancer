@@ -1,3 +1,16 @@
+* v0.2.2
+- export ~to~ procedure (used to convert inner type of a
+  ~Measurement~)
+- fix ~**~, ~^~ for two Measurements
+- allow to disable printing of unicode symbols for string repr of
+  ~Measurement~ by compiling with ~-d:noUnicode~
+- fix issue #6 to allow ~measurement~ procedure to construct correct
+  type for given types other than ~float~
+- fix division of a literal with a measurement
+- fix power math operation for different argument types, including
+  fixing issue #7
+  - adds a new private submodule for a helper macro to generate
+    `power` calls for static integers (including negative)
 * v0.2.1
 - change import path in test file to relative import
 * v0.2.0
