@@ -108,7 +108,7 @@ proc procRes[T](res: T, grad: T, arg: Measurement[T]): Measurement[T] =
       der[key] = (grad * val).T # force to `T` to avoid `unchained` errors
   # σ is 0 if input's σ is zero, else it's ∂(f(x))/∂x * Δx =^= grad * arg.uncer
   let σ = if arg.uncer == T(0.0): T(0.0) else: abs((grad * arg.uncer).T) # force to `T` to avoid `unchained` errors
-  result = initMeasurement[T](res, σ, der, 0'u32)
+  result = initMeasurement[T](res, σ, der, 0'u64)
 
 proc derivative[T](a: Measurement[T], key: DerivKey[T]): T =
   result = if key in a.der: a.der[key] else: T(0.0)
@@ -138,7 +138,7 @@ when false:
               # add (σ_x•∂G/∂x)² to total uncertainty (squared), but only if deriv != 0
               resder[key] = ∂G_∂x
               err = err + ((σ_x * ∂G_∂x) * (σ_x * ∂G_∂x)) # convert product back to avoid `unchained` error
-    result = initMeasurement[T](res, sqrt(err), resder, 0'u32)
+    result = initMeasurement[T](res, sqrt(err), resder, 0'u64)
 
 proc procRes[T](res: T, grad: openArray[T], args: openArray[Measurement[T]]): Measurement[T] =
   ## Note: In the body of this we perform rather funny back and forth conversions between `T`
@@ -169,7 +169,7 @@ proc procRes[T](res: T, grad: openArray[T], args: openArray[Measurement[T]]): Me
             err = (err + ((σ_x * ∂G_∂x) * (σ_x * ∂G_∂x)).T).T # convert product back to avoid `unchained` error
   result = initMeasurement[T](res,
                               T(sqrt(err.float)), # convert to float and back to T to satisfy `unchained`
-                              resder, 0'u32)
+                              resder, 0'u64)
 
 proc `±`*[T: FloatLike](val, uncer: T): Measurement[T] =
   result = initMeasurement[T](val, uncer)
