@@ -18,6 +18,26 @@ type
   FloatLike* = concept x
     x.toFloat is float
 
+  ## A concept for any float like that is *not* an integer type
+  FloatLikeNotInt* = concept x, type T
+    x.toFloat is float
+    not (T is SomeInteger)
+
+  ## A concept for types that are float like and whose application of
+  ## `pow` compiles and yields the same type. E.g. `float32`, but not
+  ## an `unchained` unit (does not support `pow`)
+  FloatLikeSupportsPow* = concept x, type T
+    x.toFloat is float
+    pow(x, 1.0) is T
+
+  ## A concept for types that are float like and whose application of
+  ## `^` with a RT integer value compiles and yields the same type. E.g. `float32`,
+  ## but not an `unchained` unit (needs a `static int` to know the resulting
+  ## type at CT)
+  FloatLikeSupportsIntegerPowRT* {.explain.} = concept x, type T
+    x.toFloat is float
+    (x ^ 1) is T
+
   IdType = uint64 # "`uint64` should be enough for everyone... uhhh"
 
   DerivKey[T] = tuple[val, uncer: T, tag: IdType]
@@ -242,7 +262,7 @@ proc `-=`*[T: FloatLike](a: var Measurement[T], b: Measurement[T]) =
 
 
 ## Type conversion. TODO: make this more type safe, funnily enough
-proc to[T: FloatLike; U](m: Measurement[T], dtype: typedesc[U]): Measurement[U] =
+proc to*[T: FloatLike; U](m: Measurement[T], dtype: typedesc[U]): Measurement[U] =
   when T is U:
     result = m
   else:
