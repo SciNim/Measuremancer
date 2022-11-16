@@ -355,8 +355,7 @@ proc `^`*[T: FloatLike](m: Measurement[T], p: static SomeInteger): auto =
 
 ## -> for RT natural exponents
 proc `**`*[T: FloatLikeSupportsIntegerPowRT](m: Measurement[T], p: SomeInteger): Measurement[T] =
-  result = procRes(m.val ^ p, p.float * power(m.val, (p - 1)), m)
-
+  result = procRes(power(m.val, p), p.float * power(m.val, (p - 1)), m)
 proc `^`*[T: FloatLikeSupportsIntegerPowRT](m: Measurement[T], p: SomeInteger): Measurement[T] =
   m ** p
 
