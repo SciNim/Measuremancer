@@ -24,6 +24,11 @@ type
 
   Derivatives[T] = OrderedTable[DerivKey[T], T]
 
+  ## *NOTE*: When dealing with `unchained` units, the derivative returned has the
+  ## wrong units! Instead of `T` it should be the type of `∂a(x)/∂x`, but
+  ## the code gets too complicated for the time being, as it would require use to
+  ## store different types for the actual measurement and the gradient, turning
+  ## `Measurement` into a double generic.
   Measurement*[T: FloatLike] = object
     val: T
     uncer: T
@@ -111,6 +116,7 @@ proc procRes[T](res: T, grad: T, arg: Measurement[T]): Measurement[T] =
   result = initMeasurement[T](res, σ, der, 0'u64)
 
 proc derivative[T](a: Measurement[T], key: DerivKey[T]): T =
+  ## See note about derivative in definition of `Measurement` type
   result = if key in a.der: a.der[key] else: T(0.0)
 
 ## A "type safe" solution required for `unchained` could be achieved with something like this.
