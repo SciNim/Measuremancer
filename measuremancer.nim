@@ -339,20 +339,40 @@ proc `/`*[U: FloatLike; T: FloatLike](m: Measurement[U], x: T{lit}): Measurement
 ## NOTE: Using any of the following exponentiation functions is dangerous. The Nim parser
 ## might include an additional prefix into the argument to `^` instead of keeping it as a,
 ## well, prefix. So `-(x - μ)^2` is parsed as `(-(x - μ))^2`!
-proc `**`*[T: FloatLike](m: Measurement[T], p: Natural): Measurement[T] =
-  result = procRes(m.val ^ p, p.float * m.val ^ (p - 1), m)
-proc `^`*[T: FloatLike](m: Measurement[T], p: Natural): Measurement[T] = m ** p
 
-proc `**`*[T: FloatLike](m: Measurement[T], p: FloatLike): Measurement[T] =
-  result = procRes(pow(m.val, p), p * pow(m.val, (p - 1.0)), m)
-proc `^`*[T: FloatLike](m: Measurement[T], p: FloatLike): Measurement[T] = m ** p
+from measuremancer / math_utils import power
+## -> for static exponents
+proc `**`*[T: FloatLike](m: Measurement[T], p: static SomeInteger): auto =
+  # Get the resulting type
+  type U = typeof(power(m.val, p))
+  # and convert what is necessary.
+  result = procRes(U(power(m.val, p)), U(p.float * power(m.val, (p - 1))), m.to(U))
+proc `^`*[T: FloatLike](m: Measurement[T], p: static SomeInteger): auto =
+  ## NOTE: If you import `unchained`, this version is not actually used, as `unchained`
+  ## defines a macro `^` for static integer exponents, which simply rewrites
+  ## the AST to an infix (or trivial) node!
+  m ** p
 
+## -> for RT natural exponents
+proc `**`*[T: FloatLikeSupportsIntegerPowRT](m: Measurement[T], p: SomeInteger): Measurement[T] =
+  result = procRes(m.val ^ p, p.float * power(m.val, (p - 1)), m)
+
+proc `^`*[T: FloatLikeSupportsIntegerPowRT](m: Measurement[T], p: SomeInteger): Measurement[T] =
+  m ** p
+
+## -> for explicit float exponents
+proc `**`*[T: FloatLikeSupportsPow; U: FloatLikeNotInt](
+  m: Measurement[T], p: U): Measurement[T] =
+    result = procRes(pow(m.val, p), p * pow(m.val, (p - 1.0)), m)
+proc `^`*[T: FloatLikeSupportsPow; U: FloatLikeNotInt](
+  m: Measurement[T], p: U): Measurement[T] =
+    m ** p
 
 proc `**`*[T: FloatLike](a, b: Measurement[T]): Measurement[T] =
   let powV = pow(a.val, b.val)
   result = procRes(powV,
-                   [pow(a.val, b.val - 1.0),
-                    powV * log(a.val)],
+                   [pow(a.val, b.val - 1.0) * b.val,
+                    powV * ln(a.val)],
                    [a, b])
 proc `^`*[T: FloatLike](a, b: Measurement[T]): Measurement[T] = a ** b
 
