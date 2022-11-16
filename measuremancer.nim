@@ -368,11 +368,12 @@ proc `^`*[T: FloatLike](a, b: Measurement[T]): Measurement[T] = a ** b
 
 import std / macros
 template genCall(fn, letStmt, x, m, deriv: untyped): untyped =
-  proc `fn`*[T](m: Measurement[T]): Measurement[T] =
+  proc `fn`*[T](m: Measurement[T]): auto =
     ## letStmt contains the definition of x, `let x = m.val`
     letStmt
     ## `deriv` is handed as an expression containing `x`
-    result = procRes(fn(x), deriv, m)
+    type U = typeof(fn(x))
+    result = procRes(fn(x), deriv, m.to(U))
 
 macro defineSupportedFunctions(body: untyped): untyped =
   result = newStmtList()
