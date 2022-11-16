@@ -138,6 +138,13 @@ suite "Measurements of other types (e.g. unchained)":
     check( (k1 + k2).value.type is keV )
     check( (k1 + k2).error.type is keV )
 
+  test "Construction of `measurement` via proc":
+    let k1 = measurement(5.0.keV, 1.0.keV)
+    let k2 = measurement(2.5.keV, 1.5.keV)
+    check k1 + k2 =~= 7.5.keV ± 1.802775637731995.keV
+    check( (k1 + k2).value.type is keV )
+    check( (k1 + k2).error.type is keV )
+
   test "Addition of incompatible units fails":
     let k1 = 5.0.keV ± 1.0.keV
     let m = 1.0.kg ± 0.1.kg
