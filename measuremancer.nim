@@ -179,7 +179,10 @@ proc `±`*[T: FloatLike](val, uncer: T{lit}): Measurement[float] =
   result = initMeasurement[float](val.float, uncer.float)
 
 proc measurement*[T: FloatLike](value, uncertainty: T): Measurement[T] =
-  result = initMeasurement[float](value, uncertainty)
+  result = initMeasurement[T](value, uncertainty)
+
+proc measurement*[T: FloatLike](val, uncer: T{lit}): Measurement[float] =
+  result = initMeasurement[float](val.float, uncer.float)
 
 proc pretty*[T: FloatLike](m: Measurement[T], precision: int): string =
   let mval = m.val.float.formatBiggestFloat(precision = precision)
