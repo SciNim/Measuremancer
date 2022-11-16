@@ -66,6 +66,50 @@ suite "Measurement & measurement":
     # √( 0.5² / 1.0² + 5.0² · 0.1² / 1.0⁴ ) = √ 0.5 = 0.707106781187
     check y / x =~= 5.0 ± 0.7071067811865476
 
+  test "Power (integer literal)":
+    let x = 2.0 ± 0.2
+    # This should be:
+    # √( (2 · 2.0)² · 0.2² ) = 0.8
+    check x ^ 2 == 4.0 ± 0.8
+    check x ** 2 == 4.0 ± 0.8
+
+  test "Power (static integer)":
+    let x = 2.0 ± 0.2
+    # This should be:
+    # √( (2 · 2.0)² · 0.2² ) = 0.8
+    const y = 2
+    check x ^ y == 4.0 ± 0.8
+    check x ** y == 4.0 ± 0.8
+
+  test "Power (integer)":
+    let x = 2.0 ± 0.2
+    # This should be:
+    # √( (2 · 2.0)² · 0.2² ) = 0.8
+    let y = 2
+    check x ^ y == 4.0 ± 0.8
+    check x ** y == 4.0 ± 0.8
+
+  test "Power (float)":
+    let x = 2.0 ± 0.2
+    # This should be:
+    # √( [ 2.5 · 2.0^{1.5} ]² · 0.2² ) = √ ( 50 · 0.² ) = sqrt(2)
+    check x ^ 2.5 == pow(2.0, 2.5) ± sqrt(2.0)
+    check x ** 2.5 == pow(2.0, 2.5) ± sqrt(2.0)
+
+  test "Negative power (integer)":
+    let x = 2.0 ± 0.2
+    # This should be:
+    # √( (-2 / x³)² · Δx² ) = √( (-2 / 2³)² · 0.2² ) = 0.05
+    check x ^ (-2) == 1.0 / (x^2)
+    check x ** -2 == 1.0 / (x^2)
+    check x ^ -2 == 0.250 ± 0.0500
+
+  test "Power of two measurements":
+    let x = 2.0 ± 0.2
+    let y = 5.0 ± 0.5
+    check x ^ y == 32.0 ± 19.467818870203708
+    check x ** y == 32.0 ± 19.467818870203708
+
 suite "Measurement and same symbol":
   # Simple correlations due to same symbol being used are correctly handled.
   # i.e. subtraction and division results in a measurement without error.
@@ -159,3 +203,55 @@ suite "Measurements of other types (e.g. unchained)":
     check m * a =~= 9.81.kg•m•s⁻² ± 1.101072658819571.kg•m•s⁻²
     check( (m * a).value.type is kg•m•s⁻² )
     check( (m * a).error.type is kg•m•s⁻² )
+
+  # integer powers can be supported for units. Float however not! (floats representing
+  # integer powers need to be converted to int manually!)
+  test "Power (integer literal)":
+    let x = 2.0.m ± 0.2.m
+    # This should be:
+    # √( (2 · 2.0)² · 0.2² ) = 0.8
+    check x ^ 2 == 4.0.m² ± 0.8.m²
+    check x ** 2 == 4.0.m² ± 0.8.m²
+
+  test "Power (static integer)":
+    let x = 2.0.m ± 0.2.m
+    # This should be:
+    # √( (2 · 2.0)² · 0.2² ) = 0.8
+    const y = 2
+    check x ^ y == 4.0.m² ± 0.8.m²
+    check x ** y == 4.0.m² ± 0.8.m²
+
+  test "Negative power with units":
+    let x = 2.0.m ± 0.2.m
+    defUnit(Meter⁻²)
+    # This should be:
+    # √( (-2 / x³)² · Δx² ) = √( (-2 / 2³)² · 0.2² ) = 0.05
+    check x ^ -2 == 1.0 / (x^2)
+    ## NOTE: As `**` does not use `unchained's` rewrite `^`, but rather
+    ## the regular `**` proc, the resulting unit is equivalent, but not
+    ## the *same Nim unit* (as they are `distinct` and `Meter⁻²` is not
+    ## declared in the measuremancer context. As such we cannot check the
+    ## sanity of the types at CT.
+    # TODO: investigate why this prints as `0.0500` instead of `0.050`
+    check $(x ** (-2)) == "0.250 ± 0.0500 Meter⁻²"
+    check (x ** -2).to(Meter⁻²) == to(1.0 / (x^2), Meter⁻²)
+
+  test "Trigonometric functions only work with UnitLess":
+    block UnitLessCheck:
+      ## the division is just a simple way to get a `UnitLess` value
+      ## as on `unchained` HEAD (2022-11-16) `UnitLess` is not exported.
+      let x = (1.0.kg / 1.0.kg) ± (0.1.kg / 1.0.kg)
+      # This should be:
+      # √ (cos²(1.0) · 0.1²)
+      check typeof(x.value) is UnitLess
+      # application of `sin` returns a `float`! Valid units for `sin` are those convertible
+      # to `float` via converter defined in unchained
+      check typeof(sin(x)) is Measurement[float]
+      let exp = sin(x.value) ± sqrt(cos(x.value)^2 * (x.error)^2)
+      check typeof(exp) is Measurement[float]
+      check sin(x) =~= exp
+    block RadianCheck: # converts to UnitLess
+      let x = 1.0.Radian ± 0.1.Radian
+      # This should be:
+      # √ (cos²(1.0) · 0.1²)
+      check sin(x) =~= sin(1.0.Radian) ± sqrt(cos(1.0.Radian)^2 * 0.1.Radian^2) # 0.05403023058681398
