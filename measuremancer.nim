@@ -184,7 +184,10 @@ proc measurement*[T: FloatLike](value, uncertainty: T): Measurement[T] =
 proc pretty*[T: FloatLike](m: Measurement[T], precision: int): string =
   let mval = m.val.float.formatBiggestFloat(precision = precision)
   let merr = m.uncer.float.formatBiggestFloat(precision = precision)
-  result = &"{mval} ± {merr}"
+  when not defined(noUnicode):
+    result = &"{mval} ± {merr}"
+  else:
+    result = &"{mval} +- {merr}"
   when not (T is float):
     result.add " " & $T
 
