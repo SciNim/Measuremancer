@@ -34,7 +34,7 @@ type
   ## `^` with a RT integer value compiles and yields the same type. E.g. `float32`,
   ## but not an `unchained` unit (needs a `static int` to know the resulting
   ## type at CT)
-  FloatLikeSupportsIntegerPowRT* {.explain.} = concept x, type T
+  FloatLikeSupportsIntegerPowRT* = concept x, type T
     x.toFloat is float
     (x ^ 1) is T
 
@@ -49,11 +49,21 @@ type
   ## the code gets too complicated for the time being, as it would require use to
   ## store different types for the actual measurement and the gradient, turning
   ## `Measurement` into a double generic.
-  Measurement*[T: FloatLike] = object
-    val: T
-    uncer: T
-    id: IdType
-    der: Derivatives[T] # map of the derivatives
+when (NimMajor, NimMinor, NimPatch) < (1, 7, 0):
+  type
+    Measurement*[T] = object
+      val: T
+      uncer: T
+      id: IdType
+      der: Derivatives[T] # map of the derivatives
+else:
+  type
+    Measurement*[T: FloatLike] = object
+      val: T
+      uncer: T
+      id: IdType
+      der: Derivatives[T] # map of the derivatives
+
 
 func value*[T: FloatLike](m: Measurement[T]): T {.inline.} = m.val
 func uncertainty*[T: FloatLike](m: Measurement[T]): T {.inline.} = m.uncer
