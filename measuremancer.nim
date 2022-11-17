@@ -338,12 +338,16 @@ proc `/`*[T: FloatLike; U: FloatLike](m: Measurement[T], x: U): auto =
 
 ## Overloads for literals that force same type as Measurement has
 proc `/`*[T: FloatLike; U: FloatLike](x: T{lit}, m: Measurement[U]): auto =
+  when T is SomeInteger:
+    let x = U(x)
   type A = typeof( x / m.val )
   let arg: A = A(x / m.val)
   let grad: A =  A(-x / (m.val * m.val))
   result = procRes(arg, grad, m.to(A))
 proc `/`*[U: FloatLike; T: FloatLike](m: Measurement[U], x: T{lit}): Measurement[U] =
-  result = procRes(U(m.val / U(x)), 1.0 / U(x), m)
+  when T is SomeInteger:
+    let x = U(x)
+  result = procRes(U(m.val / x), 1.0 / x, m)
 
 # Power `^`
 ## NOTE: Using any of the following exponentiation functions is dangerous. The Nim parser
