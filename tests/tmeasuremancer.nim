@@ -31,6 +31,12 @@ suite "Measurement & constant":
     check x / y == 1.0 ± 0.1
     check y / x == 1.0 ± 0.1
 
+  test "Division by int literal / const with Measurement":
+    let x = 5.0 ± 0.5
+    const y = 5
+    check x / y == 1.0 ± 0.1
+    check y / x == 1.0 ± 0.1
+
 suite "Measurement & measurement":
   test "Addition":
     let x = 1.0 ± 0.1
