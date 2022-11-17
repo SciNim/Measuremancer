@@ -1,3 +1,6 @@
+* v0.2.3
+- fix regression that disabled ability to use division of int literals
+  with a ~Measurement~
 * v0.2.2
 - export ~to~ procedure (used to convert inner type of a
   ~Measurement~)
