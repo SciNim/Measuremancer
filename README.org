@@ -110,7 +110,7 @@ still a chance of things breaking. Basic math (=*=, =/=, =+= and =-=)
 should work correctly now though.
 
 
-** Compilation flags & Nim versions prior to 1.6
+** Compilation flags & Nim version notes
 
 As of Nim version 1.6 any code using this library has to be compiled
 with:
@@ -124,4 +124,10 @@ avoid having to set this setting manually every time.
 *NOTE*: This flag was not available in Nim 1.4 yet. Unicode operators
  simply weren't a thing. If you wish to use this library anyway, you
  can do so, simply by constructing =Measurements= using the
- =measurement= procedure.
+ =measurement= procedure.  Further, in Nim >= 2.0, unicode operators are
+ allowed by default.  So, special compilation options are unneeded.
+
+If compiled with `-d:useCligen`, uncertain number pair formatting is the
+default `cligen/strUt.fmtUncertain`.  That uses the uncertainty to limit
+precision of both value & uncertainty to the same decimal place (2 decimals
+of the uncertainty by default, as per one common convention).
