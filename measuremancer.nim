@@ -229,15 +229,21 @@ proc measurement*[T: FloatLike](value, uncertainty: T): Measurement[T] =
 proc measurement*[T: FloatLike](val, uncer: T{lit}): Measurement[float] =
   result = initMeasurement[float](val.float, uncer.float)
 
-proc pretty*[T: FloatLike](m: Measurement[T], precision: int): string =
-  let mval = m.val.float.formatBiggestFloat(precision = precision)
-  let merr = m.uncer.float.formatBiggestFloat(precision = precision)
-  when not defined(noUnicode):
-    result = &"{mval} ± {merr}"
-  else:
-    result = &"{mval} +- {merr}"
-  when not (T is float):
-    result.add " " & $T
+when defined(useCligen):
+  import cligen/strUt
+  proc pretty*[T: FloatLike](m: Measurement[T], precision: int): string =
+    result = fmtUncertain(m.val.float, m.uncer.float)
+    when not (T is float): result.add " " & $T
+else:
+  proc pretty*[T: FloatLike](m: Measurement[T], precision: int): string =
+    let mval = m.val.float.formatBiggestFloat(precision = precision)
+    let merr = m.uncer.float.formatBiggestFloat(precision = precision)
+    when not defined(noUnicode):
+      result = &"{mval} ± {merr}"
+    else:
+      result = &"{mval} +- {merr}"
+    when not (T is float):
+      result.add " " & $T
 
 proc `$`*[T: FloatLike](m: Measurement[T]): string = pretty(m, 3)
 
