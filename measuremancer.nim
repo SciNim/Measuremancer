@@ -215,6 +215,10 @@ proc procRes[T](res: T, grad: openArray[T], args: openArray[Measurement[T]]): Me
 proc `±`*[T: FloatLike](val, uncer: T): Measurement[T] =
   result = initMeasurement[T](val, uncer)
 
+proc `+-`*[T: FloatLike](val, uncer: T): Measurement[T] = val ± uncer
+  ## `noUnicode`-mode makes output like this which users may want to re-use as
+  ## input without edit.  Nim 2/`--experimental:unicodeOperators` allows it.
+
 ## Do we want the following? It forces any `FloatLike` to generate a `Measurement[float]`!
 proc `±`*[T: FloatLike](val, uncer: T{lit}): Measurement[float] =
   result = initMeasurement[float](val.float, uncer.float)
