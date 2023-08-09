@@ -128,6 +128,7 @@ avoid having to set this setting manually every time.
  allowed by default.  So, special compilation options are unneeded.
 
 If compiled with `-d:useCligen`, uncertain number pair formatting is the
-default `cligen/strUt.fmtUncertain`.  That uses the uncertainty to limit
-precision of both value & uncertainty to the same decimal place (2 decimals
-of the uncertainty by default, as per one common convention).
+default [`cligen/strUt`](https://github.com/c-blake/cligen/blob/master/cligen/strUt.nim).`fmtUncertain`
+That uses the uncertainty to limit precision of both value & uncertainty to the
+same decimal place (2 decimals of the uncertainty by default, as per one common
+convention).
