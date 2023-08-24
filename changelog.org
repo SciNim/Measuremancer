@@ -1,3 +1,8 @@
+* v0.2.4
+- add ~-d:useCligen~ CT option to allow using ~cligen/fmtUncertain~
+  for the uncertainty formatting (PR #12)
+- add ~+-~ helper as a non-unicode version of ~±~ (PR #12)
+- export ~val~, ~uncer~ fields of ~Measurement~
 * v0.2.3
 - fix regression that disabled ability to use division of int literals
   with a ~Measurement~
