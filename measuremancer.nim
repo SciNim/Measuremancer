@@ -110,7 +110,7 @@ proc `==`*[T: FloatLike](k1, k2: DerivKey[T]): bool =
 proc `==`*[T: FloatLike](m1, m2: Measurement[T]): bool =
   ## comparison of two measurements does not need to take into account the
   ## type, as we require same type anyway. Hence use `toFloat` to compare as float
-  bind toFloat # bind the locally defined `toFloat`
+  mixin toFloat
   result = almostEqual(m1.val.toFloat, m2.val.toFloat) and
            almostEqual(m1.uncer.toFloat, m2.uncer.toFloat)
 
