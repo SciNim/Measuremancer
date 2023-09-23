@@ -94,6 +94,9 @@ when (NimMajor, NimMinor, NimPatch) < (1, 6, 0):
     ## this works even if x or y are NaN, infinity or zero, all of which can carry a sign.
     result = c_copysign(x, y)
 
+proc toFloat*[T: SomeFloat](x: T): float = x.float # float is biggest type, so this should be fine
+proc toFloat*[T: SomeInteger](x: T): float = x.float # float is biggest type, so this should be fine
+
 proc `==`*[T: FloatLike](k1, k2: DerivKey[T]): bool =
   if k1.tag == k2.tag and almostEqual(k1.val.float, k2.val.float) and
      almostEqual(k1.uncer.float, k2.uncer.float):
@@ -119,9 +122,6 @@ proc `==`*[T: FloatLike](x: T, m: Measurement[T]): bool =
 
 proc isInf*[T: FloatLike](m: Measurement[T]): bool = m.val == Inf
 proc isNegInf*[T: FloatLike](m: Measurement[T]): bool = m.val == -Inf
-
-proc toFloat*[T: SomeFloat](x: T): float = x.float # float is biggest type, so this should be fine
-proc toFloat*[T: SomeInteger](x: T): float = x.float # float is biggest type, so this should be fine
 
 proc initDerivatives[T](): Derivatives[T] = initOrderedTable[DerivKey[T], T]()
 
