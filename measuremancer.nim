@@ -1,3 +1,4 @@
+when not declared(assert): import std/assertions
 import math, tables, strformat
 from strutils import formatBiggestFloat, FloatFormatMode
 
