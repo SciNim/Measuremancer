@@ -232,8 +232,17 @@ proc measurement*[T: FloatLike](val, uncer: T{lit}): Measurement[float] =
 
 when defined(useCligen):
   import cligen/strUt
-  proc pretty*[T: FloatLike](m: Measurement[T], precision: int): string =
-    result = fmtUncertain(m.val.float, m.uncer.float)
+  proc pretty*[T: FloatLike](m: Measurement[T], precision: int, merge = false): string =
+    ## Uses `cligen` to format uncertainties. If `merge = false` uncertainties are
+    ## printed in the form `A ± B` or `(A ± B)e-C`. If `merge = true` the uncertainty `B`
+    ## is given as `A(B)e-C`.
+    ##
+    ## `merge = true` is useful as it allows to directly paste the output into `siunitx` in
+    ## LaTeX.
+    if merge:
+      result = fmtUncertainMerged(m.val.float, m.uncer.float, sigDigs = precision)
+    else:
+      result = fmtUncertain(m.val.float, m.uncer.float, sigDigs = precision)
     when not (T is float): result.add " " & $T
 else:
   proc pretty*[T: FloatLike](m: Measurement[T], precision: int): string =
