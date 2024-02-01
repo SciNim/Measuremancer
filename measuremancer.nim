@@ -245,7 +245,8 @@ when defined(useCligen):
       result = fmtUncertain(m.val.float, m.uncer.float, sigDigs = precision)
     when not (T is float): result.add " " & $T
 else:
-  proc pretty*[T: FloatLike](m: Measurement[T], precision: int): string =
+  proc pretty*[T: FloatLike](m: Measurement[T], precision: int, merge = false): string =
+    ## On the regular printing backend `merge` is ignored.
     let mval = m.val.float.formatBiggestFloat(precision = precision)
     let merr = m.uncer.float.formatBiggestFloat(precision = precision)
     when not defined(noUnicode):
