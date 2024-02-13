@@ -1,3 +1,6 @@
+* v0.2.6
+- add ~merge~ argument to ~pretty~ to allow merging the uncertainty
+  ~B~ with the value ~A~ as ~A(B)~ when using ~cligen~ for printing
 * v0.2.5
 - move ~toFloat~ definitions above ~==~ (where they are used, PR #13
   by @metagn)
