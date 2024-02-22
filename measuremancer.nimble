@@ -14,3 +14,4 @@ task testDeps, "Installs dependencies for tests":
 
 task test, "Run standard tests":
   exec "nim c -r tests/tmeasuremancer.nim"
+  exec "nim c -d:release -d:useCligen -r tests/tCligenParsing.nim"
