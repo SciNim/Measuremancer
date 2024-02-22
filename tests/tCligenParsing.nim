@@ -5,6 +5,17 @@ import std / random
 import measuremancer
 import std / strscans
 
+template checkError(typ, body, msg: untyped): untyped =
+  if not body:
+    inc typ
+    echo msg
+
+var
+  errUncert = 0
+  errDigits = 0
+  errExp = 0
+  errDigit = 0
+
 # How many digits the error may be smaller than the value in OOM
 const N_smaller = 6
 const Total = 1_000_000
@@ -33,7 +44,7 @@ for i in 0 ..< Total:
   let (success, digit, numbers, uncert, exp) = scanTuple(resStr, "$i.$+($+)e$i")
   if success:
     # 1. verify precision in parenthesis. Must be number of digits given by `prec`
-    doAssert (uncert).len == prec, ("Need: " & $prec & " got: " & $uncert)
+    checkError errUncert, (uncert).len == prec, ("Need uncertainty: " & $prec & " got: " & $uncert)
     # 2. determine difference in exponent after possible rounding
     var expErrReal = expErrDiff
     # 2a. check if rounding of error affects difference
@@ -52,17 +63,25 @@ for i in 0 ..< Total:
     let numDigits = min(expErrReal + prec, 18) # maximum precision: 18
     #echo "expErrDiff ", expErrDiff, " expErrReal ", expErrReal, " prec ", prec, " numDigits ", numDigits, " numbers: ", numbers.len
     #echo "REAL EXP: ", expErrDiff + prec - 1
-    doAssert numDigits == numbers.len, ("Need: " & $numDigits & " got: " & $numbers.len)
+    checkError errDigits, numDigits == numbers.len, ("Need digits: " & $numDigits & " got: " & $numbers.len)
     # 3. verify exponent
     let expValReal = if valNoExpRound == 1.0: expVal + 1 else: expVal # if value rounded up!
-    doAssert exp == expValReal, ("Need: " & $expValReal & " got: " & $exp)
+    checkError errExp, exp == expValReal, ("Need exponent: " & $expValReal & " got: " & $exp)
     # 4. verify digit in front of `.`
     var intDigit = ((valNoExp * 10.0).round(valueRound - 1)).trunc.int
     if intDigit == 10:
       intDigit = 1
-    doAssert intDigit == digit, "Got " & $digit & " expected " & $intDigit
+    checkError errDigit, intDigit == digit, "Need integer: " & $intDigit & " got: " & $digit
 
   if not success: ## Cases without `e` notation
     # HANDLE THES
     #echo success, " res ", resStr
     discard
+
+echo "Found errors:"
+echo "\t Uncertainty = ", errUncert
+echo "\t Digits      = ", errDigits
+echo "\t Exponent    = ", errExp
+echo "\t Digit       = ", errDigit
+
+doAssert errUncert == 0 and errDigits == 0 and errExp == 0 and errDigit == 0
