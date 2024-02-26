@@ -2,7 +2,7 @@ import std / random
 ## This is just a short program to generate numbers (value ± uncertainty),
 ## format them with `cligen` and verify that the formatting is what we expect, given
 ## the uncertainties and the required precision.
-import measuremancer
+import ../measuremancer
 import std / strscans
 
 template checkError(typ, body, msg: untyped): untyped =
