@@ -1,3 +1,5 @@
+* v0.2.7
+- fix import of ~measuremancer~ in ~tCligenParsing~ to use local path
 * v0.2.6
 - add ~merge~ argument to ~pretty~ to allow merging the uncertainty
   ~B~ with the value ~A~ as ~A(B)~ when using ~cligen~ for printing
