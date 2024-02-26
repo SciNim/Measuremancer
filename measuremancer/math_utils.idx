@@ -1,0 +1,3 @@
+nimTitle	math_utils	measuremancer/math_utils.html	module measuremancer/math_utils		0
+nim	power	measuremancer/math_utils.html#power.m,typed,staticint	macro power(x: typed; num: static int): untyped		5
+nim	power	measuremancer/math_utils.html#power,T,SomeInteger	proc power[T](x: T; num: SomeInteger): T		40
