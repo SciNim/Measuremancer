@@ -375,21 +375,20 @@ proc `/`*[T: FloatLike; U: FloatLike](m: Measurement[T], x: U): auto =
 ## Overloads for literals that force same type as Measurement has
 proc `/`*[T: FloatLike; U: FloatLike](x: T{lit}, m: Measurement[U]): auto =
   when T is SomeInteger:
-    let x = U(x)
+    let x = x.float
   type A = typeof( x / m.val )
   let arg: A = A(x / m.val)
   let grad: A =  A(-x / (m.val * m.val))
   result = procRes(arg, grad, m.toInternal(A))
 proc `/`*[U: FloatLike; T: FloatLike](m: Measurement[U], x: T{lit}): Measurement[U] =
   when T is SomeInteger:
-    let x = U(x)
-  result = procRes(U(m.val / x), 1.0 / x, m)
+    let x = x.float
+  result = procRes(m.val / x, U(1.0 / x), m)
 
 # Power `^`
 ## NOTE: Using any of the following exponentiation functions is dangerous. The Nim parser
 ## might include an additional prefix into the argument to `^` instead of keeping it as a,
 ## well, prefix. So `-(x - μ)^2` is parsed as `(-(x - μ))^2`!
-
 from measuremancer / math_utils import power
 ## -> for static exponents
 proc `**`*[T: FloatLike](m: Measurement[T], p: static SomeInteger): auto =
