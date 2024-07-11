@@ -132,6 +132,16 @@ proc `==`*[T: FloatLike](m1, m2: Measurement[T]): bool =
   result = almostEqual(m1.val.toFloat, m2.val.toFloat) and
            almostEqual(m1.uncer.toFloat, m2.uncer.toFloat)
 
+proc to*[T: FloatLike; U](m: Measurement[T], dtype: typedesc[U]): Measurement[U]
+proc `==`*[T: FloatLike; U: FloatLike](m1: Measurement[T], m2: Measurement[U]): bool =
+  ## NOTE: This is a bit hacky, but it checks if two types are simply aliases based
+  ## on their names being equal. In `unchained` this can happen if a local type
+  ## is redefined and the two measurements have different "type instances".
+  when $T == $U:
+    result = m1 == m2.to(T)
+  else:
+    {.error: "Cannot compare measurements with type: " & $T & " to a measurement with type " & $U.}
+
 proc `==`*[T: FloatLike](m: Measurement[T], x: T): bool =
   result = almostEqual(m.val, x) and m.uncer == 0.0
 
