@@ -291,13 +291,28 @@ proc `-=`*[T: FloatLike](a: var Measurement[T], b: Measurement[T]) =
   let tmp = a - b
   a = tmp
 
-
-## Type conversion. TODO: make this more type safe, funnily enough
-proc to*[T: FloatLike; U](m: Measurement[T], dtype: typedesc[U]): Measurement[U] =
+proc toInternal[T: FloatLike; U](m: Measurement[T], dtype: typedesc[U]): Measurement[U] =
+  ## Internal type conversion, whch *forces* the types `T` to be converted to `U`.
+  ## Only intended for internal use.
   when T is U:
     result = m
   else:
     result = initMeasurement[U](m.val.U, m.uncer.U, m.der.changeType(dtype), m.id)
+
+proc to*[T: FloatLike; U](m: Measurement[T], dtype: typedesc[U]): Measurement[U] =
+  ## Converts the given Measurement of type `T` to `U`. If the two types are similar,
+  ## but non trivially equal, it converts the types according to the `to` procedure
+  ## provided by the `FloatLike`.
+  ##
+  ## For example converting a (unchained) `Measurement[KiloGram]` to `Measurement[Gram]`
+  ## does the right thing.
+  ##
+  ## Note that for types `U` which are a regular alias of some other, the exact name of
+  ## the type might change (i.e. `N•m` might become `J`).
+  when T is U:
+    result = m
+  else:
+    result = initMeasurement[U](m.val.to(U), m.uncer.to(U), m.der.changeType(dtype), m.id)
 
 # unary minus
 proc `-`*[T: FloatLike](m: Measurement[T]): Measurement[T] = procRes(-m.val, T(-1), m)
@@ -306,9 +321,9 @@ proc `*`*[T: FloatLike; U: FloatLike](a: Measurement[T], b: Measurement[U]): aut
   let val = a.val * b.val # TODO: the same logic should apply for the other cases.
                           # the equivalent line ensures only valid types are mixed.
   type resType = typeof(val)
-  result = procRes(val, [b.val.resType, a.val.resType], [a.to(resType), b.to(resType)])
+  result = procRes(val, [b.val.resType, a.val.resType], [a.toInternal(resType), b.toInternal(resType)])
 
-## The following two dirtry (!) templates help us with the assignment of the result
+## The following two dirty (!) templates help us with the assignment of the result
 ## procedure calls, taking care of deducing the types and performing the conversions
 ## so that we don't need to manually convert them all the time.
 ## `assign1` is used for the call to `procRes` with a single argument and
@@ -316,12 +331,12 @@ proc `*`*[T: FloatLike; U: FloatLike](a: Measurement[T], b: Measurement[U]): aut
 template assign1(valArg, arg, m: untyped): untyped {.dirty.} =
   let val = valArg
   type resType = typeof(val)
-  result = procRes(val, arg.resType, m.to(resType))
+  result = procRes(val, arg.resType, m.toInternal(resType))
 
 template assign2(valArg, arg1, arg2, m1, m2: untyped): untyped {.dirty.} =
   let val = valArg
   type resType = typeof(val)
-  result = procRes(val, [arg1.resType, arg2.resType], [m1.to(resType), m2.to(resType)])
+  result = procRes(val, [arg1.resType, arg2.resType], [m1.toInternal(resType), m2.toInternal(resType)])
 
 # helper overloads
 proc `*`*[T: FloatLike; U: FloatLike](x: T, m: Measurement[U]): auto =
@@ -364,7 +379,7 @@ proc `/`*[T: FloatLike; U: FloatLike](x: T{lit}, m: Measurement[U]): auto =
   type A = typeof( x / m.val )
   let arg: A = A(x / m.val)
   let grad: A =  A(-x / (m.val * m.val))
-  result = procRes(arg, grad, m.to(A))
+  result = procRes(arg, grad, m.toInternal(A))
 proc `/`*[U: FloatLike; T: FloatLike](m: Measurement[U], x: T{lit}): Measurement[U] =
   when T is SomeInteger:
     let x = U(x)
@@ -381,7 +396,7 @@ proc `**`*[T: FloatLike](m: Measurement[T], p: static SomeInteger): auto =
   # Get the resulting type
   type U = typeof(power(m.val, p))
   # and convert what is necessary.
-  result = procRes(U(power(m.val, p)), U(p.float * power(m.val, (p - 1))), m.to(U))
+  result = procRes(U(power(m.val, p)), U(p.float * power(m.val, (p - 1))), m.toInternal(U))
 proc `^`*[T: FloatLike](m: Measurement[T], p: static SomeInteger): auto =
   ## NOTE: If you import `unchained`, this version is not actually used, as `unchained`
   ## defines a macro `^` for static integer exponents, which simply rewrites
@@ -427,7 +442,7 @@ template genCall(fn, letStmt, x, m, deriv: untyped): untyped =
     letStmt
     ## `deriv` is handed as an expression containing `x`
     type U = typeof(fn(x))
-    result = procRes(fn(x), deriv, m.to(U))
+    result = procRes(fn(x), deriv, m.toInternal(U))
 
 macro defineSupportedFunctions(body: untyped): untyped =
   result = newStmtList()
