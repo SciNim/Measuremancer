@@ -66,8 +66,8 @@ type
 when (NimMajor, NimMinor, NimPatch) < (1, 7, 0):
   type
     Measurement*[T: FloatLike] = object
-      val: T
-      uncer: T
+      val*: T
+      uncer*: T
       id: IdType
       der: Derivatives[T] # map of the derivatives
 else:
