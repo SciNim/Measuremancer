@@ -52,7 +52,7 @@ type
   ## `Measurement` into a double generic.
 when (NimMajor, NimMinor, NimPatch) < (1, 7, 0):
   type
-    Measurement*[T] = object
+    Measurement*[T: FloatLike] = object
       val: T
       uncer: T
       id: IdType
