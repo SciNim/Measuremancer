@@ -16,28 +16,41 @@ This module ``must`` be compiled with `--experimental:unicodeOperators`!
 ]#
 
 type
-  FloatLike* = concept x
+  ## The `FloatLike` concept must be any type that can be converted to a `float`
+  ## and provide a `to` procedure to change the type to another type.
+  FloatLike* = concept x, type T, type U
     x.toFloat is float
+    let y = T(1.0) # temp var to make sure it is of type `T`. `to(T, U)` does not work
+    y.to(U) is U
 
-  ## A concept for any float like that is *not* an integer type
-  FloatLikeNotInt* = concept x, type T
-    x.toFloat is float
-    not (T is SomeInteger)
+  ## A concept for any float-like that that can be an argument for the base
+  ## in `pow`, such that the return value can be converted to a regular float
+  ## using `toFloat`.
+  FloatLikeSupportsPow* = concept x, type T, type U
+    x is FloatLike
+    pow(x, 1.0).toFloat is float
 
-  ## A concept for types that are float like and whose application of
-  ## `pow` compiles and yields the same type. E.g. `float32`, but not
-  ## an `unchained` unit (does not support `pow`)
-  FloatLikeSupportsPow* = concept x, type T
-    x.toFloat is float
-    pow(x, 1.0) is T
+  ## A concept for any float-like that that can be an argument for the exponential
+  ## in `pow`, such that the return value can be converted to a regular float
+  ## using `toFloat`.
+  FloatLikeCanBePowExp* = concept x, type T, type U
+    x is FloatLike
+    pow(1.0, x).toFloat is float
 
   ## A concept for types that are float like and whose application of
   ## `^` with a RT integer value compiles and yields the same type. E.g. `float32`,
   ## but not an `unchained` unit (needs a `static int` to know the resulting
   ## type at CT)
-  FloatLikeSupportsIntegerPowRT* = concept x, type T
-    x.toFloat is float
-    (x ^ 1) is T
+  FloatLikeUnchangedUnderPow* = concept x, type T
+    x is FloatLike
+    ## Note: this does not actually check for a runtime integer, but for reasons
+    ## that elude me, it does the right thing. And doing the "correct" thing here
+    ## does _not_ work. So uhh.
+    (x ^ 2) is T
+
+  FloatLikeNotInt* = concept x, type T, type U
+    x is FloatLike
+    x isnot SomeInteger
 
   IdType = uint64 # "`uint64` should be enough for everyone... uhhh"
 
@@ -69,6 +82,10 @@ else:
 func value*[T: FloatLike](m: Measurement[T]): T {.inline.} = m.val
 func uncertainty*[T: FloatLike](m: Measurement[T]): T {.inline.} = m.uncer
 func error*[T: FloatLike](m: Measurement[T]): T {.inline.} = m.uncer
+
+## Helper conversion to have the same API for `Unchained` types as well as
+## regular numbers.
+proc to*[T: SomeNumber; U](x: T, _: typedesc[U]): U = x.U
 
 import hashes
 proc hash*[T: FloatLike](key: DerivKey[T]): Hash =
@@ -402,10 +419,11 @@ proc `^`*[T: FloatLike](m: Measurement[T], p: static SomeInteger): auto =
   ## the AST to an infix (or trivial) node!
   m ** p
 
-## -> for RT natural exponents
-proc `**`*[T: FloatLikeSupportsIntegerPowRT](m: Measurement[T], p: SomeInteger): Measurement[T] =
+proc `**`*[T: FloatLikeUnchangedUnderPow](m: Measurement[T], p: SomeInteger): Measurement[T] =
+  ## Exponentiation for RT natural exponents, or technically for any type `T` for which calculating
+  ## `x ^ N` does not change the type.
   result = procRes(power(m.val, p), p.float * power(m.val, (p - 1)), m)
-proc `^`*[T: FloatLikeSupportsIntegerPowRT](m: Measurement[T], p: SomeInteger): Measurement[T] =
+proc `^`*[T: FloatLikeUnchangedUnderPow](m: Measurement[T], p: SomeInteger): Measurement[T] =
   m ** p
 
 ## -> for explicit float exponents
@@ -416,13 +434,24 @@ proc `^`*[T: FloatLikeSupportsPow; U: FloatLikeNotInt](
   m: Measurement[T], p: U): Measurement[T] =
     m ** p
 
-proc `**`*[T: FloatLike](a, b: Measurement[T]): Measurement[T] =
-  let powV = pow(a.val, b.val)
+proc `**`*[T: FloatLikeSupportsPow; U: FloatLikeCanBePowExp](a: Measurement[T], b: Measurement[U]): Measurement[T] =
+  ## NOTE: Both types must be compatible `FloatLike` in such a way that `T` can be
+  ## the base argument to `pow` and `U` the exponent argument. Note that the operation
+  ## is destructive, i.e. the return type of `pow(T, U)` is forced to be `T`.
+  ##
+  ## This is done so that we don't need to rely on returning `auto`.
+  ## ``If`` the destructive nature is a problem for your use case, open an issue
+  ## and we can adjust the logic.
+  let powV = T(pow(a.val, b.val))
   result = procRes(powV,
-                   [pow(a.val, b.val - 1.0) * b.val,
-                    powV * ln(a.val)],
-                   [a, b])
-proc `^`*[T: FloatLike](a, b: Measurement[T]): Measurement[T] = a ** b
+                   [T(pow(a.val, b.val - 1.0) * b.val),
+                    T(powV * ln(a.val))],
+                   [a, b.toInternal(T)])
+
+proc `^`*[T: FloatLikeSupportsPow; U: FloatLikeCanBePowExp](
+  a: Measurement[T],
+  b: Measurement[U]): Measurement[T] =
+    a ** b
 
 # TODO: need to add a lot more primitive functions
 
