@@ -1,6 +1,6 @@
 # Package
 
-version       = "0.2.7"
+version       = "0.2.8"
 author        = "Vindaar"
 description   = "A library to handle measurement uncertainties"
 license       = "MIT"
