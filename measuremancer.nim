@@ -283,7 +283,8 @@ else:
     when not (T is float):
       result.add " " & $T
 
-proc `$`*[T: FloatLike](m: Measurement[T]): string = pretty(m, 3)
+const mmErrPrec* {.intdefine.} = 3  # Digits of err; -d:mmErrPrec=N to edit
+proc `$`*[T: FloatLike](m: Measurement[T]): string = pretty(m, mmErrPrec)
 
 template print*(arg: untyped): untyped =
   echo astToStr(arg), ": ", $arg
