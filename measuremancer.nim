@@ -16,28 +16,41 @@ This module ``must`` be compiled with `--experimental:unicodeOperators`!
 ]#
 
 type
-  FloatLike* = concept x
+  ## The `FloatLike` concept must be any type that can be converted to a `float`
+  ## and provide a `to` procedure to change the type to another type.
+  FloatLike* = concept x, type T, type U
     x.toFloat is float
+    let y = T(1.0) # temp var to make sure it is of type `T`. `to(T, U)` does not work
+    y.to(U) is U
 
-  ## A concept for any float like that is *not* an integer type
-  FloatLikeNotInt* = concept x, type T
-    x.toFloat is float
-    not (T is SomeInteger)
+  ## A concept for any float-like that that can be an argument for the base
+  ## in `pow`, such that the return value can be converted to a regular float
+  ## using `toFloat`.
+  FloatLikeSupportsPow* = concept x, type T, type U
+    x is FloatLike
+    pow(x, 1.0).toFloat is float
 
-  ## A concept for types that are float like and whose application of
-  ## `pow` compiles and yields the same type. E.g. `float32`, but not
-  ## an `unchained` unit (does not support `pow`)
-  FloatLikeSupportsPow* = concept x, type T
-    x.toFloat is float
-    pow(x, 1.0) is T
+  ## A concept for any float-like that that can be an argument for the exponential
+  ## in `pow`, such that the return value can be converted to a regular float
+  ## using `toFloat`.
+  FloatLikeCanBePowExp* = concept x, type T, type U
+    x is FloatLike
+    pow(1.0, x).toFloat is float
 
   ## A concept for types that are float like and whose application of
   ## `^` with a RT integer value compiles and yields the same type. E.g. `float32`,
   ## but not an `unchained` unit (needs a `static int` to know the resulting
   ## type at CT)
-  FloatLikeSupportsIntegerPowRT* = concept x, type T
-    x.toFloat is float
-    (x ^ 1) is T
+  FloatLikeUnchangedUnderPow* = concept x, type T
+    x is FloatLike
+    ## Note: this does not actually check for a runtime integer, but for reasons
+    ## that elude me, it does the right thing. And doing the "correct" thing here
+    ## does _not_ work. So uhh.
+    (x ^ 2) is T
+
+  FloatLikeNotInt* = concept x, type T, type U
+    x is FloatLike
+    x isnot SomeInteger
 
   IdType = uint64 # "`uint64` should be enough for everyone... uhhh"
 
@@ -52,9 +65,9 @@ type
   ## `Measurement` into a double generic.
 when (NimMajor, NimMinor, NimPatch) < (1, 7, 0):
   type
-    Measurement*[T] = object
-      val: T
-      uncer: T
+    Measurement*[T: FloatLike] = object
+      val*: T
+      uncer*: T
       id: IdType
       der: Derivatives[T] # map of the derivatives
 else:
@@ -69,6 +82,10 @@ else:
 func value*[T: FloatLike](m: Measurement[T]): T {.inline.} = m.val
 func uncertainty*[T: FloatLike](m: Measurement[T]): T {.inline.} = m.uncer
 func error*[T: FloatLike](m: Measurement[T]): T {.inline.} = m.uncer
+
+## Helper conversion to have the same API for `Unchained` types as well as
+## regular numbers.
+proc to*[T: SomeNumber; U](x: T, _: typedesc[U]): U = x.U
 
 import hashes
 proc hash*[T: FloatLike](key: DerivKey[T]): Hash =
@@ -114,6 +131,16 @@ proc `==`*[T: FloatLike](m1, m2: Measurement[T]): bool =
   mixin toFloat
   result = almostEqual(m1.val.toFloat, m2.val.toFloat) and
            almostEqual(m1.uncer.toFloat, m2.uncer.toFloat)
+
+proc to*[T: FloatLike; U](m: Measurement[T], dtype: typedesc[U]): Measurement[U]
+proc `==`*[T: FloatLike; U: FloatLike](m1: Measurement[T], m2: Measurement[U]): bool =
+  ## NOTE: This is a bit hacky, but it checks if two types are simply aliases based
+  ## on their names being equal. In `unchained` this can happen if a local type
+  ## is redefined and the two measurements have different "type instances".
+  when $T == $U:
+    result = m1 == m2.to(T)
+  else:
+    {.error: "Cannot compare measurements with type: " & $T & " to a measurement with type " & $U.}
 
 proc `==`*[T: FloatLike](m: Measurement[T], x: T): bool =
   result = almostEqual(m.val, x) and m.uncer == 0.0
@@ -232,11 +259,21 @@ proc measurement*[T: FloatLike](val, uncer: T{lit}): Measurement[float] =
 
 when defined(useCligen):
   import cligen/strUt
-  proc pretty*[T: FloatLike](m: Measurement[T], precision: int): string =
-    result = fmtUncertain(m.val.float, m.uncer.float)
+  proc pretty*[T: FloatLike](m: Measurement[T], precision: int, merge = false): string =
+    ## Uses `cligen` to format uncertainties. If `merge = false` uncertainties are
+    ## printed in the form `A ± B` or `(A ± B)e-C`. If `merge = true` the uncertainty `B`
+    ## is given as `A(B)e-C`.
+    ##
+    ## `merge = true` is useful as it allows to directly paste the output into `siunitx` in
+    ## LaTeX.
+    if merge:
+      result = fmtUncertainMerged(m.val.float, m.uncer.float, sigDigs = precision)
+    else:
+      result = fmtUncertain(m.val.float, m.uncer.float, sigDigs = precision)
     when not (T is float): result.add " " & $T
 else:
-  proc pretty*[T: FloatLike](m: Measurement[T], precision: int): string =
+  proc pretty*[T: FloatLike](m: Measurement[T], precision: int, merge = false): string =
+    ## On the regular printing backend `merge` is ignored.
     let mval = m.val.float.formatBiggestFloat(precision = precision)
     let merr = m.uncer.float.formatBiggestFloat(precision = precision)
     when not defined(noUnicode):
@@ -281,13 +318,28 @@ proc `-=`*[T: FloatLike](a: var Measurement[T], b: Measurement[T]) =
   let tmp = a - b
   a = tmp
 
-
-## Type conversion. TODO: make this more type safe, funnily enough
-proc to*[T: FloatLike; U](m: Measurement[T], dtype: typedesc[U]): Measurement[U] =
+proc toInternal[T: FloatLike; U](m: Measurement[T], dtype: typedesc[U]): Measurement[U] =
+  ## Internal type conversion, whch *forces* the types `T` to be converted to `U`.
+  ## Only intended for internal use.
   when T is U:
     result = m
   else:
     result = initMeasurement[U](m.val.U, m.uncer.U, m.der.changeType(dtype), m.id)
+
+proc to*[T: FloatLike; U](m: Measurement[T], dtype: typedesc[U]): Measurement[U] =
+  ## Converts the given Measurement of type `T` to `U`. If the two types are similar,
+  ## but non trivially equal, it converts the types according to the `to` procedure
+  ## provided by the `FloatLike`.
+  ##
+  ## For example converting a (unchained) `Measurement[KiloGram]` to `Measurement[Gram]`
+  ## does the right thing.
+  ##
+  ## Note that for types `U` which are a regular alias of some other, the exact name of
+  ## the type might change (i.e. `N•m` might become `J`).
+  when T is U:
+    result = m
+  else:
+    result = initMeasurement[U](m.val.to(U), m.uncer.to(U), m.der.changeType(dtype), m.id)
 
 # unary minus
 proc `-`*[T: FloatLike](m: Measurement[T]): Measurement[T] = procRes(-m.val, T(-1), m)
@@ -296,9 +348,9 @@ proc `*`*[T: FloatLike; U: FloatLike](a: Measurement[T], b: Measurement[U]): aut
   let val = a.val * b.val # TODO: the same logic should apply for the other cases.
                           # the equivalent line ensures only valid types are mixed.
   type resType = typeof(val)
-  result = procRes(val, [b.val.resType, a.val.resType], [a.to(resType), b.to(resType)])
+  result = procRes(val, [b.val.resType, a.val.resType], [a.toInternal(resType), b.toInternal(resType)])
 
-## The following two dirtry (!) templates help us with the assignment of the result
+## The following two dirty (!) templates help us with the assignment of the result
 ## procedure calls, taking care of deducing the types and performing the conversions
 ## so that we don't need to manually convert them all the time.
 ## `assign1` is used for the call to `procRes` with a single argument and
@@ -306,12 +358,12 @@ proc `*`*[T: FloatLike; U: FloatLike](a: Measurement[T], b: Measurement[U]): aut
 template assign1(valArg, arg, m: untyped): untyped {.dirty.} =
   let val = valArg
   type resType = typeof(val)
-  result = procRes(val, arg.resType, m.to(resType))
+  result = procRes(val, arg.resType, m.toInternal(resType))
 
 template assign2(valArg, arg1, arg2, m1, m2: untyped): untyped {.dirty.} =
   let val = valArg
   type resType = typeof(val)
-  result = procRes(val, [arg1.resType, arg2.resType], [m1.to(resType), m2.to(resType)])
+  result = procRes(val, [arg1.resType, arg2.resType], [m1.toInternal(resType), m2.toInternal(resType)])
 
 # helper overloads
 proc `*`*[T: FloatLike; U: FloatLike](x: T, m: Measurement[U]): auto =
@@ -350,38 +402,38 @@ proc `/`*[T: FloatLike; U: FloatLike](m: Measurement[T], x: U): auto =
 ## Overloads for literals that force same type as Measurement has
 proc `/`*[T: FloatLike; U: FloatLike](x: T{lit}, m: Measurement[U]): auto =
   when T is SomeInteger:
-    let x = U(x)
+    let x = x.float
   type A = typeof( x / m.val )
   let arg: A = A(x / m.val)
   let grad: A =  A(-x / (m.val * m.val))
-  result = procRes(arg, grad, m.to(A))
+  result = procRes(arg, grad, m.toInternal(A))
 proc `/`*[U: FloatLike; T: FloatLike](m: Measurement[U], x: T{lit}): Measurement[U] =
   when T is SomeInteger:
-    let x = U(x)
-  result = procRes(U(m.val / x), 1.0 / x, m)
+    let x = x.float
+  result = procRes(m.val / x, U(1.0 / x), m)
 
 # Power `^`
 ## NOTE: Using any of the following exponentiation functions is dangerous. The Nim parser
 ## might include an additional prefix into the argument to `^` instead of keeping it as a,
 ## well, prefix. So `-(x - μ)^2` is parsed as `(-(x - μ))^2`!
-
 from measuremancer / math_utils import power
 ## -> for static exponents
 proc `**`*[T: FloatLike](m: Measurement[T], p: static SomeInteger): auto =
   # Get the resulting type
   type U = typeof(power(m.val, p))
   # and convert what is necessary.
-  result = procRes(U(power(m.val, p)), U(p.float * power(m.val, (p - 1))), m.to(U))
+  result = procRes(U(power(m.val, p)), U(p.float * power(m.val, (p - 1))), m.toInternal(U))
 proc `^`*[T: FloatLike](m: Measurement[T], p: static SomeInteger): auto =
   ## NOTE: If you import `unchained`, this version is not actually used, as `unchained`
   ## defines a macro `^` for static integer exponents, which simply rewrites
   ## the AST to an infix (or trivial) node!
   m ** p
 
-## -> for RT natural exponents
-proc `**`*[T: FloatLikeSupportsIntegerPowRT](m: Measurement[T], p: SomeInteger): Measurement[T] =
+proc `**`*[T: FloatLikeUnchangedUnderPow](m: Measurement[T], p: SomeInteger): Measurement[T] =
+  ## Exponentiation for RT natural exponents, or technically for any type `T` for which calculating
+  ## `x ^ N` does not change the type.
   result = procRes(power(m.val, p), p.float * power(m.val, (p - 1)), m)
-proc `^`*[T: FloatLikeSupportsIntegerPowRT](m: Measurement[T], p: SomeInteger): Measurement[T] =
+proc `^`*[T: FloatLikeUnchangedUnderPow](m: Measurement[T], p: SomeInteger): Measurement[T] =
   m ** p
 
 ## -> for explicit float exponents
@@ -392,13 +444,24 @@ proc `^`*[T: FloatLikeSupportsPow; U: FloatLikeNotInt](
   m: Measurement[T], p: U): Measurement[T] =
     m ** p
 
-proc `**`*[T: FloatLike](a, b: Measurement[T]): Measurement[T] =
-  let powV = pow(a.val, b.val)
+proc `**`*[T: FloatLikeSupportsPow; U: FloatLikeCanBePowExp](a: Measurement[T], b: Measurement[U]): Measurement[T] =
+  ## NOTE: Both types must be compatible `FloatLike` in such a way that `T` can be
+  ## the base argument to `pow` and `U` the exponent argument. Note that the operation
+  ## is destructive, i.e. the return type of `pow(T, U)` is forced to be `T`.
+  ##
+  ## This is done so that we don't need to rely on returning `auto`.
+  ## ``If`` the destructive nature is a problem for your use case, open an issue
+  ## and we can adjust the logic.
+  let powV = T(pow(a.val, b.val))
   result = procRes(powV,
-                   [pow(a.val, b.val - 1.0) * b.val,
-                    powV * ln(a.val)],
-                   [a, b])
-proc `^`*[T: FloatLike](a, b: Measurement[T]): Measurement[T] = a ** b
+                   [T(pow(a.val, b.val - 1.0) * b.val),
+                    T(powV * ln(a.val))],
+                   [a, b.toInternal(T)])
+
+proc `^`*[T: FloatLikeSupportsPow; U: FloatLikeCanBePowExp](
+  a: Measurement[T],
+  b: Measurement[U]): Measurement[T] =
+    a ** b
 
 # TODO: need to add a lot more primitive functions
 
@@ -417,7 +480,7 @@ template genCall(fn, letStmt, x, m, deriv: untyped): untyped =
     letStmt
     ## `deriv` is handed as an expression containing `x`
     type U = typeof(fn(x))
-    result = procRes(fn(x), deriv, m.to(U))
+    result = procRes(fn(x), deriv, m.toInternal(U))
 
 macro defineSupportedFunctions(body: untyped): untyped =
   result = newStmtList()

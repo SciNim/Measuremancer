@@ -1,3 +1,16 @@
+* v0.2.8
+- add equality of Measurements with "different" types (if aliases)
+- improve concept definition, add ~to~ for numbers
+- fix ~^~, ~**~ involving a ~UnitLess~ and regular ~float~, due to the
+  ~distinct~ nature of the former relative to the latter
+- force Nim 1.6 Measurement type to require ~FloatLike~
+- fix division involving integer literals
+- add some more ~unchained~ related tests
+* v0.2.7
+- fix import of ~measuremancer~ in ~tCligenParsing~ to use local path
+* v0.2.6
+- add ~merge~ argument to ~pretty~ to allow merging the uncertainty
+  ~B~ with the value ~A~ as ~A(B)~ when using ~cligen~ for printing
 * v0.2.5
 - move ~toFloat~ definitions above ~==~ (where they are used, PR #13
   by @metagn)

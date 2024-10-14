@@ -1,8 +1,5 @@
 * Measuremancer - A library to handle your measurement uncertainties
 
-*NOTE*:
-The name is still a stub. Feel free to tell me a good one!
-
 This library is inspired by the excellent [[https://github.com/JuliaPhysics/Measurements.jl][Measurements.jl]] and can, for
 all intents and purposes, be considered a port of it (even if it
 doesn't yet support some of its features).

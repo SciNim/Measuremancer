@@ -181,7 +181,7 @@ suite "More complicated examples":
 
 import unchained
 suite "Measurements of other types (e.g. unchained)":
-  test "Addiiton of unchained units":
+  test "Addition of unchained units":
     let k1 = 5.0.keV ± 1.0.keV
     let k2 = 2.5.keV ± 1.5.keV
     check k1 + k2 =~= 7.5.keV ± 1.802775637731995.keV
@@ -210,6 +210,33 @@ suite "Measurements of other types (e.g. unchained)":
     check( (m * a).value.type is kg•m•s⁻² )
     check( (m * a).error.type is kg•m•s⁻² )
 
+  test "Multiplication with as scalar":
+    let m = 1.0.kg ± 0.1.kg
+    check m * 10 == 10.kg ± 1.kg
+
+  test "Division by a scalar":
+    let m = 10.0.kg ± 1.kg
+    check m / 10 == 1.kg ± 0.1.kg
+
+  test "Dividing a scalar by a measurement":
+    let m = 10.0.kg ± 1.kg
+    defUnit(kg⁻¹)
+    let r = (10 / m).to(kg⁻¹)
+    check typeof(r.val) is kg⁻¹
+    let exp = 1.kg⁻¹ ± 0.1.kg⁻¹
+    check r == exp
+
+  test "Different type aliases no problem for `==`":
+    ## Note: also check that different type aliases are
+    ## no problem in. `10 / m` defines a `kg⁻¹`, which is technically
+    ## different from `exp`'s `kg⁻¹` defined locally here...
+    let m = 10.0.kg ± 1.kg
+    defUnit(kg⁻¹)
+    let exp = 1.kg⁻¹ ± 0.1.kg⁻¹
+    check 10 / m == exp
+    let y = 10.0
+    check y / m == exp
+
   # integer powers can be supported for units. Float however not! (floats representing
   # integer powers need to be converted to int manually!)
   test "Power (integer literal)":
@@ -226,6 +253,52 @@ suite "Measurements of other types (e.g. unchained)":
     const y = 2
     check x ^ y == 4.0.m² ± 0.8.m²
     check x ** y == 4.0.m² ± 0.8.m²
+
+  test "Power including UnitLess works":
+    let x = 5.UnitLess ± 1.UnitLess
+    let exp = 2
+    # CT
+    check x ^ 2 == 25.UnitLess ± 10.UnitLess
+    # RT
+    check x ^ exp == 25.UnitLess ± 10.UnitLess
+
+  test "Power of float to UnitLess works":
+    let x = 5.0 ± 1.0
+    let exp = 2.UnitLess
+    # CT
+    check x ^ 2.UnitLess == 25.0 ± 10.0
+    check x ** 2.UnitLess == 25.0 ± 10.0
+    # RT
+    check x ^ exp == 25.0 ± 10.0
+    check x ** exp == 25.0 ± 10.0
+
+  test "Power of float to UnitLess works":
+    let x = 5.0 ± 1.0
+    let exp = 2.UnitLess
+    # CT
+    check x ^ 2.UnitLess == 25.0 ± 10.0
+    check x ** 2.UnitLess == 25.0 ± 10.0
+    # RT
+    check x ^ exp == 25.0 ± 10.0
+    check x ** exp == 25.0 ± 10.0
+
+  test "Power of Measurement[UnitLess] to Measurement[UnitLess] works":
+    let x = 5.0.UnitLess ± 1.0.UnitLess
+    let exp = 2.0.UnitLess ± 0.1.UnitLess
+    check x ^ exp =~= 25.0.UnitLess ± 10.7791147578257318.UnitLess
+    check x ** exp =~= 25.0.UnitLess ± 10.7791147578257318.UnitLess
+
+  test "Power of float to Measurement[UnitLess] works":
+    let x = 5.0 ± 1.0
+    let exp = 2.0.UnitLess ± 0.1.UnitLess
+    check x ^ exp =~= 25.0 ± 10.7791147578257318
+    check x ** exp =~= 25.0 ± 10.7791147578257318
+
+  test "Power of Measurement[UnitLess] to Measurement[float] works":
+    let x = 5.0.UnitLess ± 1.0.UnitLess
+    let exp = 2.0 ± 0.1
+    check x ^ exp == 25.0.UnitLess ± 10.7791147578257318.UnitLess
+    check x ** exp == 25.0.UnitLess ± 10.7791147578257318.UnitLess
 
   test "Negative power with units":
     let x = 2.0.m ± 0.2.m
@@ -261,3 +334,14 @@ suite "Measurements of other types (e.g. unchained)":
       # This should be:
       # √ (cos²(1.0) · 0.1²)
       check sin(x) =~= sin(1.0.Radian) ± sqrt(cos(1.0.Radian)^2 * 0.1.Radian^2) # 0.05403023058681398
+
+  test "Type conversion of a Measurement - float32 to float64":
+    let x = 1.0'f32 ± 0.5'f32
+    check typeof(x.to(float)) is Measurement[float]
+    check typeof(x.to(float64)) is Measurement[float64]
+    check x.to(float) == 1.0 ± 0.5
+
+  test "Type conversion of Measurements with units":
+    let m = 1000.0.kg ± 100.kg
+    let r = m.to(MegaGram)
+    check r == 1.Mg ± 0.1.Mg
