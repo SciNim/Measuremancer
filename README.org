@@ -90,7 +90,7 @@ logic to types other than =float=!
 Feel free to perform error propagation on =unchained= types for
 example:
 #+begin_src nim
-import unchained, meausuremancer
+import unchained, measuremancer
 
 let m = 1.0.kg ± 0.1.kg
 let a = 9.81.m•s⁻² ± 0.05.m•s⁻²
