@@ -597,16 +597,17 @@ template comp(fn: untyped): untyped =
 comp(`<`)
 comp(`<=`)
 
-# en.wikipedia.org/wiki/Weighted_arithmetic_mean#Variance-defined_weights
-# suggests inverse-variance weights via max.likelihood over normal distros
-# theory which also makes sense from "variance linearity" perspective.
 proc `+/`*[F](x, y: Measurement[F]): Measurement[F] =
+  ## en.wikipedia.org/wiki/Weighted_arithmetic_mean#Variance-defined_weights
+  ## suggests inverse-variance weights via max.likelihood over normal distros
+  ## theory which also makes sense from "variance linearity" perspective.
+  ## This binary operator does this for a pair of measurements.
   let (wx, wy) = (x.error^(-2.0), y.error^(-2.0))
   (wx*x + wy*y)/(wx + wy)   # ws are scalars but x,y are Measurements
 
 proc mean*[F](x: varargs[Measurement[F]]): Measurement[F] =
-  ## Average however many uncertain values in `x` into one overall estimate.
-  ## `x` can also be any `openArray[Measurement[F]]`.
+  ## Average however many uncertain values in `x` into an overall estimate using
+  ## the binary `+/` operator.  `x` can also be any `openArray[Measurement[F]]`.
   if x.len > 0:
     result = x[0]
     for i in 1 ..< x.len: result = result +/ x[i]
