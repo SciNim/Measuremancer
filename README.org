@@ -124,8 +124,9 @@ avoid having to set this setting manually every time.
  =measurement= procedure.  Further, in Nim >= 2.0, unicode operators are
  allowed by default.  So, special compilation options are unneeded.
 
-If compiled with `-d:useCligen`, uncertain number pair formatting is the
-default [`cligen/strUt`](https://github.com/c-blake/cligen/blob/master/cligen/strUt.nim).`fmtUncertain`
-That uses the uncertainty to limit precision of both value & uncertainty to the
-same decimal place (3 decimals of the uncertainty by default, as per one common
-convention, but you can compile with `-d:mmErrPrec=N` to use `N` places).
+If compiled with ~-d:useCligen~, uncertain number pair formatting is
+the default [[https://github.com/c-blake/cligen/blob/master/cligen/strUt.nim][~cligen/strUt.fmtUncertain~]]. That uses the uncertainty to
+limit precision of both value & uncertainty to the same decimal place
+(3 decimals of the uncertainty by default, as per one common
+convention, but you can compile with ~-d:mmErrPrec=N~ to use ~N~
+places).
