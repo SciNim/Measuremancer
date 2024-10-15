@@ -1,3 +1,11 @@
+* v0.2.9
+- add ~-d:mmErrPrec~ compile time option to adjust the precision with
+  which values are printed (PR #20)
+- add ~+/~ binary operator, which computes the weighted mean between
+  two measurement values (PR #20)
+- add ~mean~ procedure taking multiple measurements or an ~openArray~
+  of values and return the weighted mean of all of them (PR #20)
+- support ~ln~ for ~Measurement~ (was an oversight it was missing)  
 * v0.2.8
 - add equality of Measurements with "different" types (if aliases)
 - improve concept definition, add ~to~ for numbers
