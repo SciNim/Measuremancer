@@ -90,7 +90,7 @@ logic to types other than =float=!
 Feel free to perform error propagation on =unchained= types for
 example:
 #+begin_src nim
-import unchained, meausuremancer
+import unchained, measuremancer
 
 let m = 1.0.kg ± 0.1.kg
 let a = 9.81.m•s⁻² ± 0.05.m•s⁻²
@@ -127,5 +127,5 @@ avoid having to set this setting manually every time.
 If compiled with `-d:useCligen`, uncertain number pair formatting is the
 default [`cligen/strUt`](https://github.com/c-blake/cligen/blob/master/cligen/strUt.nim).`fmtUncertain`
 That uses the uncertainty to limit precision of both value & uncertainty to the
-same decimal place (2 decimals of the uncertainty by default, as per one common
-convention).
+same decimal place (3 decimals of the uncertainty by default, as per one common
+convention, but you can compile with `-d:mmErrPrec=N` to use `N` places).
