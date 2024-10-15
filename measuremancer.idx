@@ -1,0 +1,139 @@
+nimTitle	measuremancer	measuremancer.html	module measuremancer		0
+nim	FloatLike	measuremancer.html#FloatLike	type FloatLike		21
+nim	FloatLikeSupportsPow	measuremancer.html#FloatLikeSupportsPow	type FloatLikeSupportsPow		29
+nim	FloatLikeCanBePowExp	measuremancer.html#FloatLikeCanBePowExp	type FloatLikeCanBePowExp		36
+nim	FloatLikeUnchangedUnderPow	measuremancer.html#FloatLikeUnchangedUnderPow	type FloatLikeUnchangedUnderPow		44
+nim	FloatLikeNotInt	measuremancer.html#FloatLikeNotInt	type FloatLikeNotInt		51
+nim	Measurement	measuremancer.html#Measurement	object Measurement		75
+nim	value	measuremancer.html#value,Measurement[T: FloatLike]	proc value[T: FloatLike](m: Measurement[T]): T		82
+nim	uncertainty	measuremancer.html#uncertainty,Measurement[T: FloatLike]	proc uncertainty[T: FloatLike](m: Measurement[T]): T		83
+nim	error	measuremancer.html#error,Measurement[T: FloatLike]	proc error[T: FloatLike](m: Measurement[T]): T		84
+nim	to	measuremancer.html#to,T,typedesc[U]	proc to[T: SomeNumber; U](x: T; _: typedesc[U]): U		88
+nim	hash	measuremancer.html#hash,DerivKey[T: FloatLike]	proc hash[T: FloatLike](key: DerivKey[T]): Hash		91
+nim	toFloat	measuremancer.html#toFloat,T	proc toFloat[T: SomeFloat](x: T): float		115
+nim	toFloat	measuremancer.html#toFloat,T_2	proc toFloat[T: SomeInteger](x: T): float		116
+nim	`==`	measuremancer.html#==,DerivKey[T: FloatLike],DerivKey[T: FloatLike]	proc `==`[T: FloatLike](k1, k2: DerivKey[T]): bool		118
+nim	`==`	measuremancer.html#==,Measurement[T: FloatLike],Measurement[T: FloatLike]	proc `==`[T: FloatLike](m1, m2: Measurement[T]): bool		128
+nim	to	measuremancer.html#to,Measurement[T: FloatLike],typedesc[U]	proc to[T: FloatLike; U](m: Measurement[T]; dtype: typedesc[U]): Measurement[U]		135
+nim	`==`	measuremancer.html#==,Measurement[T: FloatLike],Measurement[U: FloatLike]	proc `==`[T: FloatLike; U: FloatLike](m1: Measurement[T]; m2: Measurement[U]): bool		136
+nim	`==`	measuremancer.html#==,Measurement[T: FloatLike],T	proc `==`[T: FloatLike](m: Measurement[T]; x: T): bool		145
+nim	`==`	measuremancer.html#==,T,Measurement[T: FloatLike]	proc `==`[T: FloatLike](x: T; m: Measurement[T]): bool		148
+nim	isInf	measuremancer.html#isInf,Measurement[T: FloatLike]	proc isInf[T: FloatLike](m: Measurement[T]): bool		151
+nim	isNegInf	measuremancer.html#isNegInf,Measurement[T: FloatLike]	proc isNegInf[T: FloatLike](m: Measurement[T]): bool		152
+nim	±	measuremancer.html#±,T,T	proc ±[T: FloatLike](val, uncer: T): Measurement[T]		243
+nim	`+-`	measuremancer.html#+-,T,T	proc `+-`[T: FloatLike](val, uncer: T): Measurement[T]		246
+nim	±	measuremancer.html#±,,	proc ±[T: FloatLike](val, uncer: T{lit}): Measurement[float]		251
+nim	measurement	measuremancer.html#measurement,T,T	proc measurement[T: FloatLike](value, uncertainty: T): Measurement[T]		254
+nim	measurement	measuremancer.html#measurement,,	proc measurement[T: FloatLike](val, uncer: T{lit}): Measurement[float]		257
+nim	pretty	measuremancer.html#pretty,Measurement[T: FloatLike],int	proc pretty[T: FloatLike](m: Measurement[T]; precision: int; merge = false): string		275
+nim	mmErrPrec	measuremancer.html#mmErrPrec	const mmErrPrec		286
+nim	`$`	measuremancer.html#$,Measurement[T: FloatLike]	proc `$`[T: FloatLike](m: Measurement[T]): string		287
+nim	print	measuremancer.html#print.t,untyped	template print(arg: untyped): untyped		289
+nim	`+`	measuremancer.html#+,Measurement[T: FloatLike],Measurement[T: FloatLike]	proc `+`[T: FloatLike](a, b: Measurement[T]): Measurement[T]		302
+nim	`+`	measuremancer.html#+,T,	proc `+`[T: FloatLike](x`gensym7: T; m`gensym7: Measurement[T]): Measurement[T]		293
+nim	`+`	measuremancer.html#+,,T	proc `+`[T: FloatLike](m`gensym7: Measurement[T]; x`gensym7: T): Measurement[T]		294
+nim	`+`	measuremancer.html#+,,	proc `+`[T: FloatLike; U: FloatLike](x`gensym7: `{}`(T, lit);\n                                m`gensym7: Measurement[U]): Measurement[U]		296
+nim	`+`	measuremancer.html#+,,_2	proc `+`[U: FloatLike; T: FloatLike](m`gensym7: Measurement[U]; x`gensym7: `{}`(T,\n    lit)): Measurement[U]		305
+nim	`+=`	measuremancer.html#+=,Measurement[T: FloatLike],Measurement[T: FloatLike]	proc `+=`[T: FloatLike](a: var Measurement[T]; b: Measurement[T])		308
+nim	`-`	measuremancer.html#-,Measurement[T: FloatLike],Measurement[T: FloatLike]	proc `-`[T: FloatLike](a, b: Measurement[T]): Measurement[T]		312
+nim	`-`	measuremancer.html#-,T,	proc `-`[T: FloatLike](x`gensym8: T; m`gensym8: Measurement[T]): Measurement[T]		293
+nim	`-`	measuremancer.html#-,,T	proc `-`[T: FloatLike](m`gensym8: Measurement[T]; x`gensym8: T): Measurement[T]		294
+nim	`-`	measuremancer.html#-,,	proc `-`[T: FloatLike; U: FloatLike](x`gensym8: `{}`(T, lit);\n                                m`gensym8: Measurement[U]): Measurement[U]		296
+nim	`-`	measuremancer.html#-,,_2	proc `-`[U: FloatLike; T: FloatLike](m`gensym8: Measurement[U]; x`gensym8: `{}`(T,\n    lit)): Measurement[U]		315
+nim	`-=`	measuremancer.html#-=,Measurement[T: FloatLike],Measurement[T: FloatLike]	proc `-=`[T: FloatLike](a: var Measurement[T]; b: Measurement[T])		318
+nim	`-`	measuremancer.html#-,Measurement[T: FloatLike]	proc `-`[T: FloatLike](m: Measurement[T]): Measurement[T]		346
+nim	`*`	measuremancer.html#*,Measurement[T: FloatLike],Measurement[U: FloatLike]	proc `*`[T: FloatLike; U: FloatLike](a: Measurement[T]; b: Measurement[U]): auto		348
+nim	`*`	measuremancer.html#*,T,Measurement[U: FloatLike]	proc `*`[T: FloatLike; U: FloatLike](x: T; m: Measurement[U]): auto		370
+nim	`*`	measuremancer.html#*,Measurement[U: FloatLike],T	proc `*`[T: FloatLike; U: FloatLike](m: Measurement[U]; x: T): auto		373
+nim	`*`	measuremancer.html#*,,Measurement[U: FloatLike]	proc `*`[T: FloatLike; U: FloatLike](x: T{lit}; m: Measurement[U]): Measurement[U]		377
+nim	`*`	measuremancer.html#*,Measurement[U: FloatLike],	proc `*`[U: FloatLike; T: FloatLike](m: Measurement[U]; x: T{lit}): Measurement[U]		379
+nim	`*=`	measuremancer.html#*=,Measurement[T: FloatLike],Measurement[T: FloatLike]	proc `*=`[T: FloatLike](a: var Measurement[T]; b: Measurement[T])		383
+nim	`*=`	measuremancer.html#*=,Measurement[T: FloatLike],T	proc `*=`[T: FloatLike](a: var Measurement[T]; b: T)		387
+nim	`/`	measuremancer.html#/,Measurement[T: FloatLike],Measurement[U: FloatLike]	proc `/`[T: FloatLike; U: FloatLike](a: Measurement[T]; b: Measurement[U]): auto		392
+nim	`/`	measuremancer.html#/,T,Measurement[U: FloatLike]	proc `/`[T: FloatLike; U: FloatLike](x: T; m: Measurement[U]): auto		397
+nim	`/`	measuremancer.html#/,Measurement[T: FloatLike],U	proc `/`[T: FloatLike; U: FloatLike](m: Measurement[T]; x: U): auto		400
+nim	`/`	measuremancer.html#/,,Measurement[U: FloatLike]	proc `/`[T: FloatLike; U: FloatLike](x: T{lit}; m: Measurement[U]): auto		404
+nim	`/`	measuremancer.html#/,Measurement[U: FloatLike],	proc `/`[U: FloatLike; T: FloatLike](m: Measurement[U]; x: T{lit}): Measurement[U]		411
+nim	`**`	measuremancer.html#**,Measurement[T: FloatLike],staticSomeInteger	proc `**`[T: FloatLike](m: Measurement[T]; p: static SomeInteger): auto		422
+nim	`^`	measuremancer.html#^,Measurement[T: FloatLike],staticSomeInteger	proc `^`[T: FloatLike](m: Measurement[T]; p: static SomeInteger): auto		427
+nim	`**`	measuremancer.html#**,Measurement[T: FloatLikeUnchangedUnderPow],SomeInteger	proc `**`[T: FloatLikeUnchangedUnderPow](m: Measurement[T]; p: SomeInteger): Measurement[\n    T]		433
+nim	`^`	measuremancer.html#^,Measurement[T: FloatLikeUnchangedUnderPow],SomeInteger	proc `^`[T: FloatLikeUnchangedUnderPow](m: Measurement[T]; p: SomeInteger): Measurement[\n    T]		437
+nim	`**`	measuremancer.html#**,Measurement[T: FloatLikeSupportsPow],U	proc `**`[T: FloatLikeSupportsPow; U: FloatLikeNotInt](m: Measurement[T]; p: U): Measurement[\n    T]		441
+nim	`^`	measuremancer.html#^,Measurement[T: FloatLikeSupportsPow],U	proc `^`[T: FloatLikeSupportsPow; U: FloatLikeNotInt](m: Measurement[T]; p: U): Measurement[\n    T]		444
+nim	`**`	measuremancer.html#**,Measurement[T: FloatLikeSupportsPow],Measurement[U: FloatLikeCanBePowExp]	proc `**`[T: FloatLikeSupportsPow; U: FloatLikeCanBePowExp](a: Measurement[T];\n    b: Measurement[U]): Measurement[T]		448
+nim	`^`	measuremancer.html#^,Measurement[T: FloatLikeSupportsPow],Measurement[U: FloatLikeCanBePowExp]	proc `^`[T: FloatLikeSupportsPow; U: FloatLikeCanBePowExp](a: Measurement[T];\n    b: Measurement[U]): Measurement[T]		462
+nim	sqrt	measuremancer.html#sqrt	proc sqrt[T](m: Measurement[T]): auto		498
+nim	cbrt	measuremancer.html#cbrt	proc cbrt[T](m: Measurement[T]): auto		498
+nim	abs2	measuremancer.html#abs2	proc abs2[T](m: Measurement[T]): auto		498
+nim	inv	measuremancer.html#inv	proc inv[T](m: Measurement[T]): auto		498
+nim	log	measuremancer.html#log	proc log[T](m: Measurement[T]): auto		498
+nim	ln	measuremancer.html#ln	proc ln[T](m: Measurement[T]): auto		498
+nim	log10	measuremancer.html#log10	proc log10[T](m: Measurement[T]): auto		498
+nim	log2	measuremancer.html#log2	proc log2[T](m: Measurement[T]): auto		498
+nim	log1p	measuremancer.html#log1p	proc log1p[T](m: Measurement[T]): auto		498
+nim	exp	measuremancer.html#exp	proc exp[T](m: Measurement[T]): auto		498
+nim	exp2	measuremancer.html#exp2	proc exp2[T](m: Measurement[T]): auto		498
+nim	expm1	measuremancer.html#expm1	proc expm1[T](m: Measurement[T]): auto		498
+nim	sin	measuremancer.html#sin	proc sin[T](m: Measurement[T]): auto		498
+nim	cos	measuremancer.html#cos	proc cos[T](m: Measurement[T]): auto		498
+nim	tan	measuremancer.html#tan	proc tan[T](m: Measurement[T]): auto		498
+nim	sec	measuremancer.html#sec	proc sec[T](m: Measurement[T]): auto		498
+nim	csc	measuremancer.html#csc	proc csc[T](m: Measurement[T]): auto		498
+nim	cot	measuremancer.html#cot	proc cot[T](m: Measurement[T]): auto		498
+nim	arcsin	measuremancer.html#arcsin	proc arcsin[T](m: Measurement[T]): auto		498
+nim	arccos	measuremancer.html#arccos	proc arccos[T](m: Measurement[T]): auto		498
+nim	arctan	measuremancer.html#arctan	proc arctan[T](m: Measurement[T]): auto		498
+nim	arcsec	measuremancer.html#arcsec	proc arcsec[T](m: Measurement[T]): auto		498
+nim	arccsc	measuremancer.html#arccsc	proc arccsc[T](m: Measurement[T]): auto		498
+nim	arccot	measuremancer.html#arccot	proc arccot[T](m: Measurement[T]): auto		498
+nim	sinh	measuremancer.html#sinh	proc sinh[T](m: Measurement[T]): auto		498
+nim	cosh	measuremancer.html#cosh	proc cosh[T](m: Measurement[T]): auto		498
+nim	tanh	measuremancer.html#tanh	proc tanh[T](m: Measurement[T]): auto		498
+nim	sech	measuremancer.html#sech	proc sech[T](m: Measurement[T]): auto		498
+nim	csch	measuremancer.html#csch	proc csch[T](m: Measurement[T]): auto		498
+nim	coth	measuremancer.html#coth	proc coth[T](m: Measurement[T]): auto		498
+nim	arcsinh	measuremancer.html#arcsinh	proc arcsinh[T](m: Measurement[T]): auto		498
+nim	arccosh	measuremancer.html#arccosh	proc arccosh[T](m: Measurement[T]): auto		498
+nim	arctanh	measuremancer.html#arctanh	proc arctanh[T](m: Measurement[T]): auto		498
+nim	arcsech	measuremancer.html#arcsech	proc arcsech[T](m: Measurement[T]): auto		498
+nim	arccsch	measuremancer.html#arccsch	proc arccsch[T](m: Measurement[T]): auto		498
+nim	arccoth	measuremancer.html#arccoth	proc arccoth[T](m: Measurement[T]): auto		498
+nim	deg2rad	measuremancer.html#deg2rad	proc deg2rad[T](m: Measurement[T]): auto		498
+nim	rad2deg	measuremancer.html#rad2deg	proc rad2deg[T](m: Measurement[T]): auto		498
+nim	erf	measuremancer.html#erf	proc erf[T](m: Measurement[T]): auto		498
+nim	erfinv	measuremancer.html#erfinv	proc erfinv[T](m: Measurement[T]): auto		498
+nim	erfc	measuremancer.html#erfc	proc erfc[T](m: Measurement[T]): auto		498
+nim	erfcinv	measuremancer.html#erfcinv	proc erfcinv[T](m: Measurement[T]): auto		498
+nim	erfi	measuremancer.html#erfi	proc erfi[T](m: Measurement[T]): auto		505
+nim	signbit	measuremancer.html#signbit,Measurement[T: FloatLike]	proc signbit[T: FloatLike](m: Measurement[T]): bool		577
+nim	copysign	measuremancer.html#copysign,Measurement[T: FloatLike],Measurement[T: FloatLike]	proc copysign[T: FloatLike](a, b: Measurement[T]): Measurement[T]		579
+nim	copysign	measuremancer.html#copysign,Measurement[T: FloatLike],U	proc copysign[T: FloatLike; U: FloatLike](a: Measurement[T]; b: U): Measurement[T]		582
+nim	copysign	measuremancer.html#copysign,U,Measurement[T: FloatLike]	proc copysign[T: FloatLike; U: FloatLike](a: U; b: Measurement[T]): U		584
+nim	abs	measuremancer.html#abs,Measurement[T: FloatLike]	proc abs[T: FloatLike](m: Measurement[T]): Measurement[T]		587
+nim	`<`	measuremancer.html#<,,	proc `<`[T: FloatLike](a`gensym105, b`gensym105: Measurement[T]): bool		592
+nim	`<`	measuremancer.html#<,,T	proc `<`[T: FloatLike](a`gensym105: Measurement[T]; b`gensym105: T): bool		593
+nim	`<`	measuremancer.html#<,T,	proc `<`[T: FloatLike](a`gensym105: T; b`gensym105: Measurement[T]): bool		594
+nim	`<`	measuremancer.html#<,,_2	proc `<`[T: FloatLike; U: FloatLike](a`gensym105: Measurement[T];\n                                b`gensym105: `{}`(U, lit)): bool		595
+nim	`<`	measuremancer.html#<,,_3	proc `<`[T: FloatLike; U: FloatLike](a`gensym105: `{}`(U, lit);\n                                b`gensym105: Measurement[T]): bool		598
+nim	`<=`	measuremancer.html#<=,,	proc `<=`[T: FloatLike](a`gensym106, b`gensym106: Measurement[T]): bool		592
+nim	`<=`	measuremancer.html#<=,,T	proc `<=`[T: FloatLike](a`gensym106: Measurement[T]; b`gensym106: T): bool		593
+nim	`<=`	measuremancer.html#<=,T,	proc `<=`[T: FloatLike](a`gensym106: T; b`gensym106: Measurement[T]): bool		594
+nim	`<=`	measuremancer.html#<=,,_2	proc `<=`[T: FloatLike; U: FloatLike](a`gensym106: Measurement[T];\n                                 b`gensym106: `{}`(U, lit)): bool		595
+nim	`<=`	measuremancer.html#<=,,_3	proc `<=`[T: FloatLike; U: FloatLike](a`gensym106: `{}`(U, lit);\n                                 b`gensym106: Measurement[T]): bool		599
+nim	`+/`	measuremancer.html#+/,Measurement[F],Measurement[F]	proc `+/`[F](x, y: Measurement[F]): Measurement[F]		601
+nim	mean	measuremancer.html#mean,varargs[Measurement[F]]	proc mean[F](x: varargs[Measurement[F]]): Measurement[F]		609
+nimgrp	-	measuremancer.html#--procs-all	proc		312
+nimgrp	copysign	measuremancer.html#copysign-procs-all	proc		579
+nimgrp	±	measuremancer.html#±-procs-all	proc		243
+nimgrp	<=	measuremancer.html#<=-procs-all	proc		592
+nimgrp	<	measuremancer.html#<-procs-all	proc		592
+nimgrp	to	measuremancer.html#to-procs-all	proc		88
+nimgrp	tofloat	measuremancer.html#toFloat-procs-all	proc		115
+nimgrp	==	measuremancer.html#==-procs-all	proc		118
+nimgrp	+	measuremancer.html#+-procs-all	proc		302
+nimgrp	/	measuremancer.html#/-procs-all	proc		392
+nimgrp	**	measuremancer.html#**-procs-all	proc		422
+nimgrp	*	measuremancer.html#*-procs-all	proc		348
+nimgrp	^	measuremancer.html#^-procs-all	proc		427
+nimgrp	measurement	measuremancer.html#measurement-procs-all	proc		254
+nimgrp	*=	measuremancer.html#*=-procs-all	proc		383

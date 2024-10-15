@@ -1,0 +1,4 @@
+* Docs
+
+Dummy directory for the docs to be placed in. This might become a
+proper general documentation file!
