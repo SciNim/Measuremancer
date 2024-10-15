@@ -508,6 +508,7 @@ defineSupportedFunctions:
   abs2        ->  1.0 * 2.0 * x
   inv         -> -1.0 * abs2(inv(x))
   log         ->  1.0 / x
+  ln          ->  1.0 / x
   log10       ->  1.0 / x / log(10)
   log2        ->  1.0 / x / log(2.0)
   log1p       ->  1.0 / (x + 1.0)
